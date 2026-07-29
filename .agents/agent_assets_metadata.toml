@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "_htwPNFI-Lpqr4cGuTTa7"
+uri = "file://LOCAL_SETUP.md"
+type = "text"
+title = "Local Setup Guide"
+
+[[outputs]]
+id = "2arlNhIZpFgRT_5Hf0Kh9"
+uri = "file://PRESENTATION_GUIDE.md"
+type = "text"
+title = "GGC Jhang Result Portal — Presentation Guide"

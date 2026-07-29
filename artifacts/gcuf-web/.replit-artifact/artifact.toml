@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "GCUF Result Portal"
+version = "1.0.0"
+id = "artifacts/gcuf-web"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20360
+
+[services.development]
+run = "pnpm --filter @workspace/gcuf-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/gcuf-web", "run", "build" ]
+publicDir = "artifacts/gcuf-web/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20360"
+BASE_PATH = "/"

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gcuf-result-portal.replit.app/sitemap.xml
