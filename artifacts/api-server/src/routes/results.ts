@@ -65,14 +65,22 @@ router.get("/results/course/:courseId", async (req: Request, res: Response) => {
   res.json(rows);
 });
 
+router.get("/results/sessions", async (_req: Request, res: Response) => {
+  const rows = await db.selectDistinct({ session: studentsTable.session }).from(studentsTable).orderBy(studentsTable.session);
+  res.json(rows.map((r) => r.session).filter(Boolean).sort());
+});
+
 router.get("/results/student", async (req: Request, res: Response) => {
   const rollNo = req.query.rollNo as string;
   const session = req.query.session as string | undefined;
+  const deptIdParam = req.query.departmentId as string | undefined;
+  const departmentId = deptIdParam ? parseInt(deptIdParam) : undefined;
 
   if (!rollNo) { res.status(400).json({ error: "rollNo required" }); return; }
 
   const conditions = [eq(studentsTable.rollNo, rollNo)];
   if (session) conditions.push(eq(studentsTable.session, session));
+  if (departmentId && !isNaN(departmentId)) conditions.push(eq(studentsTable.departmentId, departmentId));
 
   const studentRows = await db
     .select()
@@ -172,9 +180,12 @@ router.get("/results/student", async (req: Request, res: Response) => {
 router.get("/results/transcript/:rollNo", async (req: Request, res: Response) => {
   const rollNo = req.params.rollNo;
   const session = req.query.session as string | undefined;
+  const deptIdParam = req.query.departmentId as string | undefined;
+  const departmentId = deptIdParam ? parseInt(deptIdParam) : undefined;
 
   const conditions = [eq(studentsTable.rollNo, rollNo)];
   if (session) conditions.push(eq(studentsTable.session, session));
+  if (departmentId && !isNaN(departmentId)) conditions.push(eq(studentsTable.departmentId, departmentId));
 
   const studentRows = await db.select().from(studentsTable).where(and(...conditions)).limit(1);
   if (!studentRows.length) { res.status(404).json({ error: "Student not found" }); return; }

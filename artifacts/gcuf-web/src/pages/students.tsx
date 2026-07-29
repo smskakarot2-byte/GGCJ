@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Download, CheckCircle, XCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,18 +100,27 @@ function computeSemGpa(rows: StudentResult[]): number {
 
 export default function StudentsPage() {
   const [rollNo, setRollNo] = useState("");
+  const [departmentId, setDepartmentId] = useState<number | "">("");
+  const [selectedSession, setSelectedSession] = useState("");
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+  const [sessions, setSessions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<LookupData | null>(null);
   const [error, setError] = useState("");
   const { toast } = useToast();
 
+  useEffect(() => {
+    fetch("/api/departments", { credentials: "include" }).then((r) => r.json()).then(setDepartments).catch(() => {});
+    fetch("/api/results/sessions", { credentials: "include" }).then((r) => r.json()).then(setSessions).catch(() => {});
+  }, []);
+
   async function handleLookup() {
-    if (!rollNo.trim()) return;
+    if (!rollNo.trim() || !departmentId || !selectedSession) return;
     setLoading(true);
     setError("");
     setData(null);
     try {
-      const params = new URLSearchParams({ rollNo: rollNo.trim() });
+      const params = new URLSearchParams({ rollNo: rollNo.trim(), departmentId: String(departmentId), session: selectedSession });
       const res = await fetch(`/api/results/student?${params}`, { credentials: "include" });
       if (res.status === 404) { setError("Student not found."); return; }
       if (!res.ok) throw new Error(await res.text());
@@ -125,7 +134,10 @@ export default function StudentsPage() {
 
   function handleDownload() {
     if (!data) return;
-    window.open(`/api/results/transcript/${data.student.rollNo}`, "_blank");
+    const params = new URLSearchParams();
+    if (selectedSession) params.set("session", selectedSession);
+    if (departmentId) params.set("departmentId", String(departmentId));
+    window.open(`/api/results/transcript/${data.student.rollNo}?${params}`, "_blank");
   }
 
   const grouped = data ? groupBySemester(data.results) : {};
@@ -139,20 +151,39 @@ export default function StudentsPage() {
 
       {/* Search */}
       <Card className="bg-card border-card-border">
-        <CardContent className="pt-5 pb-5">
-          <div className="flex gap-2">
+        <CardContent className="pt-5 pb-5 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <select
+              value={departmentId}
+              onChange={(e) => setDepartmentId(e.target.value ? Number(e.target.value) : "")}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">Department…</option>
+              {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+            <select
+              value={selectedSession}
+              onChange={(e) => setSelectedSession(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">Session…</option>
+              {sessions.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
             <Input
               placeholder="Roll number (e.g. 109400)"
               value={rollNo}
               onChange={(e) => setRollNo(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLookup()}
-              className="flex-1"
             />
-            <Button onClick={handleLookup} disabled={loading} className="gap-2">
-              <Search className="w-4 h-4" />
-              {loading ? "Searching…" : "Lookup"}
-            </Button>
           </div>
+          <Button
+            onClick={handleLookup}
+            disabled={loading || !rollNo.trim() || !departmentId || !selectedSession}
+            className="gap-2"
+          >
+            <Search className="w-4 h-4" />
+            {loading ? "Searching…" : "Lookup"}
+          </Button>
         </CardContent>
       </Card>
 

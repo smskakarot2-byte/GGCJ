@@ -56,8 +56,9 @@ export const studentsTable = pgTable("students", {
   fatherName: text("father_name").notNull().default(""),
   cnic: text("cnic").notNull().default(""),
   session: text("session").notNull().default(""),
+  departmentId: integer("department_id").references(() => departmentsTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [unique("students_roll_session").on(t.rollNo, t.session)]);
+}, (t) => [unique("students_roll_session_dept").on(t.rollNo, t.session, t.departmentId)]);
 
 export const insertStudentSchema = createInsertSchema(studentsTable).omit({ id: true, createdAt: true });
 export type Student = typeof studentsTable.$inferSelect;

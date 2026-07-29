@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, ChevronDown, XCircle, Download, Shield, Lock, Sun, Moon } from "lucide-react";
 import collegeLogo from "/college-logo.png";
 import { useTheme } from "@/context/ThemeContext";
@@ -113,26 +113,41 @@ export default function LandingPage({ onStaffLogin }: LandingPageProps) {
   const dark = theme === "dark";
 
   const [rollNo, setRollNo] = useState("");
+  const [departmentId, setDepartmentId] = useState<number | "">("");
+  const [selectedSession, setSelectedSession] = useState("");
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+  const [sessions, setSessions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<LookupData | null>(null);
   const [error, setError] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  useEffect(() => {
+    fetch("/api/departments").then((r) => r.json()).then(setDepartments).catch(() => {});
+    fetch("/api/results/sessions").then((r) => r.json()).then(setSessions).catch(() => {});
+  }, []);
+
   async function handleLookup() {
     if (!rollNo.trim()) { setError("Please enter a roll number."); setData(null); return; }
+    if (!departmentId) { setError("Please select a department."); setData(null); return; }
+    if (!selectedSession) { setError("Please select a session."); setData(null); return; }
     setLoading(true); setError(""); setData(null);
     try {
-      const res = await fetch(`/api/results/student?rollNo=${encodeURIComponent(rollNo.trim())}`);
-      if (res.status === 404) { setError("No student found with this roll number."); return; }
+      const params = new URLSearchParams({ rollNo: rollNo.trim(), departmentId: String(departmentId), session: selectedSession });
+      const res = await fetch(`/api/results/student?${params}`);
+      if (res.status === 404) { setError("No student found with this roll number, department, and session."); return; }
       if (!res.ok) throw new Error(await res.text());
       setData(await res.json());
-    } catch { setError("Lookup failed. Please check the roll number and try again."); }
+    } catch { setError("Lookup failed. Please check your details and try again."); }
     finally { setLoading(false); }
   }
 
   function handleDownload() {
     if (!data) return;
-    window.open(`/api/results/transcript/${data.student.rollNo}`, "_blank");
+    const params = new URLSearchParams();
+    if (selectedSession) params.set("session", selectedSession);
+    if (departmentId) params.set("departmentId", String(departmentId));
+    window.open(`/api/results/transcript/${data.student.rollNo}?${params}`, "_blank");
   }
 
   const grouped = data ? groupBySemester(data.results) : {};
@@ -236,35 +251,46 @@ export default function LandingPage({ onStaffLogin }: LandingPageProps) {
 
           {/* Right — Search Form */}
           <div style={{ flexShrink: 0, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 4, padding: 28, transition: "background 0.2s, border-color 0.2s" }} className="w-full lg:w-[340px]">
-            <label style={{ display: "block", fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: c.textMuted, marginBottom: 8 }}>
-              Student Roll Number
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. 109400"
-              value={rollNo}
-              onChange={(e) => setRollNo(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleLookup()}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                fontSize: 14,
-                border: `1px solid ${c.inputBorder}`,
-                borderRadius: 4,
-                outline: "none",
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                color: c.textPrimary,
-                background: c.inputBg,
-                marginBottom: 12,
-                boxSizing: "border-box",
-                transition: "background 0.2s, border-color 0.2s",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = c.blue; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(29,78,216,0.2)`; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = c.inputBorder; e.currentTarget.style.boxShadow = "none"; }}
-            />
+            {(["Department", "Session", "Roll Number"] as const).map((label, i) => (
+              <div key={label}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: c.textMuted, marginBottom: 6 }}>
+                  {label}
+                </label>
+                {i === 0 ? (
+                  <select
+                    value={departmentId}
+                    onChange={(e) => setDepartmentId(e.target.value ? Number(e.target.value) : "")}
+                    style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: `1px solid ${c.inputBorder}`, borderRadius: 4, outline: "none", fontFamily: "'IBM Plex Sans', sans-serif", color: departmentId ? c.textPrimary : c.textMuted, background: c.inputBg, marginBottom: 12, boxSizing: "border-box", transition: "background 0.2s, border-color 0.2s", cursor: "pointer" }}
+                  >
+                    <option value="">Select department…</option>
+                    {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                ) : i === 1 ? (
+                  <select
+                    value={selectedSession}
+                    onChange={(e) => setSelectedSession(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: `1px solid ${c.inputBorder}`, borderRadius: 4, outline: "none", fontFamily: "'IBM Plex Sans', sans-serif", color: selectedSession ? c.textPrimary : c.textMuted, background: c.inputBg, marginBottom: 12, boxSizing: "border-box", transition: "background 0.2s, border-color 0.2s", cursor: "pointer" }}
+                  >
+                    <option value="">Select session…</option>
+                    {sessions.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="e.g. 109400"
+                    value={rollNo}
+                    onChange={(e) => setRollNo(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLookup()}
+                    style={{ width: "100%", padding: "10px 12px", fontSize: 14, border: `1px solid ${c.inputBorder}`, borderRadius: 4, outline: "none", fontFamily: "'IBM Plex Sans', sans-serif", color: c.textPrimary, background: c.inputBg, marginBottom: 12, boxSizing: "border-box", transition: "background 0.2s, border-color 0.2s" }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = c.blue; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(29,78,216,0.2)`; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = c.inputBorder; e.currentTarget.style.boxShadow = "none"; }}
+                  />
+                )}
+              </div>
+            ))}
             <button
               onClick={handleLookup}
-              disabled={loading}
+              disabled={loading || !rollNo.trim() || !departmentId || !selectedSession}
               style={{
                 width: "100%",
                 background: c.blue,
@@ -275,8 +301,8 @@ export default function LandingPage({ onStaffLogin }: LandingPageProps) {
                 fontSize: 14,
                 fontWeight: 600,
                 fontFamily: "'IBM Plex Sans', sans-serif",
-                cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.7 : 1,
+                cursor: (loading || !rollNo.trim() || !departmentId || !selectedSession) ? "not-allowed" : "pointer",
+                opacity: (loading || !rollNo.trim() || !departmentId || !selectedSession) ? 0.55 : 1,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

@@ -1,0 +1,174 @@
+# Fix Roll Number Collision Across Sessions & Departments
+
+## Problem
+
+The current Result System searches student results using **only the roll number**. This is incorrect because the same roll number can exist in multiple academic sessions, departments, or even different programmes.
+
+Example:
+
+* BSCS 2024 → Roll No. 101
+* BSIT 2024 → Roll No. 101
+* BSCS 2025 → Roll No. 101
+
+Currently, searching for roll number **101** may return the wrong student's result.
+
+---
+
+## Goal
+
+Redesign the result lookup so that a student is uniquely identified using a combination of:
+
+* Department
+* Programme (if applicable)
+* Session / Batch
+* Semester (if required)
+* Roll Number
+
+A roll number should **never** be treated as globally unique.
+
+---
+
+## Required Changes
+
+### 1. Database
+
+* Review the student and result tables.
+* Remove any assumption that `roll_number` is unique.
+* Create a composite uniqueness constraint using the appropriate fields, for example:
+
+```
+(department_id, session_id, roll_number)
+```
+
+or
+
+```
+(program_id, session_id, roll_number)
+```
+
+Choose whichever best matches the existing database design.
+
+Do not delete existing data.
+
+Create a migration if needed.
+
+---
+
+### 2. Backend API
+
+Update every endpoint that searches by roll number.
+
+Instead of:
+
+```
+GET /result?rollNumber=101
+```
+
+use something like:
+
+```
+GET /result?
+department=BSCS&
+session=2024&
+rollNumber=101
+```
+
+or use IDs if the system already stores them.
+
+Every query should filter using all identifying fields.
+
+Example:
+
+```
+WHERE
+roll_number = ?
+AND department_id = ?
+AND session_id = ?
+```
+
+Never query using only the roll number.
+
+---
+
+### 3. Result Search Page
+
+Modify the search UI.
+
+Instead of asking only for Roll Number, require:
+
+* Department (dropdown)
+* Session / Batch (dropdown)
+* Roll Number
+
+If programmes exist, include Programme as well.
+
+Disable the Search button until all required fields are selected.
+
+---
+
+### 4. Admin Panel
+
+Ensure every place where results are added or edited stores:
+
+* Department
+* Session
+* Programme (if applicable)
+* Roll Number
+
+When importing PDFs or award sheets, map each extracted result to the correct session and department before saving.
+
+---
+
+### 5. Validation
+
+Prevent duplicate records with identical:
+
+* Department
+* Session
+* Roll Number
+
+Display a clear validation message if a duplicate is detected.
+
+---
+
+### 6. Existing Data
+
+Do not break existing records.
+
+If old records are missing session or department information, create a safe migration strategy rather than deleting data.
+
+---
+
+### 7. Testing
+
+Test these scenarios:
+
+✓ Same roll number in different sessions returns the correct student.
+
+✓ Same roll number in different departments returns the correct student.
+
+✓ Different semesters of the same student still work correctly.
+
+✓ Existing searches continue functioning after selecting department and session.
+
+✓ No incorrect student data is returned.
+
+---
+
+### 8. Performance
+
+Add indexes on the fields used for searching (such as department_id, session_id, roll_number) so lookups remain fast.
+
+---
+
+## Deliverables
+
+* Database migration
+* Updated backend queries
+* Updated API routes
+* Updated search UI
+* Updated admin forms
+* Validation logic
+* Regression testing to ensure no existing functionality is broken
+
+Implement this as a production-quality change while preserving the current architecture and coding style of the project.
