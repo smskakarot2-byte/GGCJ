@@ -243,8 +243,8 @@ router.post("/courses/upload", upload.single("file"), async (req: Request, res: 
       try {
         const [student] = await db
           .insert(studentsTable)
-          .values({ rollNo: s.rollNo, name: s.name, fatherName: s.fatherName, cnic: s.cnic, session: s.session || header.session || "" })
-          .onConflictDoUpdate({ target: [studentsTable.rollNo, studentsTable.session], set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic } })
+          .values({ rollNo: s.rollNo, name: s.name, fatherName: s.fatherName, cnic: s.cnic, session: s.session || header.session || "", departmentId })
+          .onConflictDoUpdate({ target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId], set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic } })
           .returning();
         await db.insert(resultsTable).values({
           studentId: student.id, courseId,
@@ -295,9 +295,10 @@ router.post("/courses/upload", upload.single("file"), async (req: Request, res: 
           fatherName: s.fatherName,
           cnic: s.cnic,
           session: s.session || header.session || "",
+          departmentId,
         })
         .onConflictDoUpdate({
-          target: [studentsTable.rollNo, studentsTable.session],
+          target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId],
           set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic },
         })
         .returning();
@@ -543,9 +544,10 @@ router.post("/courses/bulk-upload", upload.array("files", 60), async (req: Reque
               fatherName: s.fatherName,
               cnic: s.cnic,
               session: s.session || header.session || "",
+              departmentId,
             })
             .onConflictDoUpdate({
-              target: [studentsTable.rollNo, studentsTable.session],
+              target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId],
               set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic },
             })
             .returning();
