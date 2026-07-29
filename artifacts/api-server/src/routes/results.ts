@@ -276,8 +276,8 @@ router.get("/results/transcript/:rollNo", async (req: Request, res: Response) =>
         <div class="table-wrap"><table>
           <thead>
             <tr>
-              <th class="left" style="min-width:90px">Code</th>
-              <th class="left" style="min-width:200px">Subject</th>
+              <th class="left">Code</th>
+              <th class="left">Subject</th>
               <th>Internal</th><th>Mid</th><th>Final</th><th>Practical</th>
               <th>Total</th><th>%</th><th>Grade</th><th>GP</th><th>Cr.Hr</th><th>Status</th>
             </tr>
@@ -333,7 +333,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;color:#000;backgrou
 .session-header{font-size:11pt;font-weight:bold;background:#1e1b4b;color:#fff;padding:6px 14px;margin-top:18px;border-radius:3px 3px 0 0;letter-spacing:.5px}
 .sem-label{font-size:9.5pt;font-weight:bold;background:#e8eaf6;color:#1e1b4b;padding:4px 14px;border-bottom:1px solid #c5cae9;border-top:1px solid #c5cae9;margin-top:6px;letter-spacing:.3px}
 table{width:100%;border-collapse:collapse;margin-top:0;font-size:8.5pt}
-th{background:#1e1b4b;color:#fff;border:1px solid #3d3a6b;padding:5px 5px;text-align:center;font-size:8pt;white-space:nowrap}
+th{background:#1e1b4b;color:#fff;border:1px solid #3d3a6b;padding:5px 5px;text-align:center;font-size:8pt;white-space:normal;word-break:break-word}
 th.left{text-align:left}
 td{border:1px solid #ddd;padding:3px 5px;text-align:center;white-space:nowrap}
 td.left{text-align:left;white-space:normal}
@@ -358,9 +358,10 @@ tr:nth-child(even) td{background:#fafafa}
 .footer{display:flex;justify-content:space-between;align-items:center;font-size:8pt;color:#777;margin-top:18px;border-top:1.5px solid #1e1b4b;padding-top:10px}
 .footer-sig{text-align:center;border-top:1px solid #999;padding-top:4px;min-width:160px;font-size:8pt;color:#555}
 
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-wrap{overflow-x:visible}
 
 @media screen and (max-width:600px){
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   body{padding:10px;font-size:9.5pt}
   .header-inner{flex-direction:column;align-items:center;text-align:center;gap:10px}
   .header-spacer{display:none}
