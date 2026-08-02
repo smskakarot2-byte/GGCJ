@@ -1,13 +1,62 @@
-import express, { type Express } from "express";
+import express, {
+  type Express,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { authMiddleware } from "./middlewares/authMiddleware";
 
 const app: Express = express();
 
+// ── Security headers ──────────────────────────────────────────────────────────
+// crossOriginEmbedderPolicy disabled so the transcript HTML page can load
+// external fonts and be opened as a standalone tab without COOP/COEP errors.
+app.use(helmet({ crossOriginEmbedderPolicy: false }));
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Set ALLOWED_ORIGINS to a comma-separated list of trusted origins in production.
+// In development (NODE_ENV !== "production"), all origins are allowed when
+// ALLOWED_ORIGINS is not set, to avoid friction.
+const isDev = process.env.NODE_ENV !== "production";
+const rawOrigins = process.env.ALLOWED_ORIGINS;
+const allowedOrigins = rawOrigins
+  ? rawOrigins.split(",").map((s) => s.trim()).filter(Boolean)
+  : [];
+
+app.use(
+  cors({
+    credentials: true,
+    origin:
+      isDev && allowedOrigins.length === 0
+        ? true
+        : (origin, cb) => {
+            // Requests with no Origin header (curl, same-origin) are allowed.
+            if (!origin || allowedOrigins.includes(origin)) {
+              cb(null, origin ?? true);
+            } else {
+              cb(null, false);
+            }
+          },
+  }),
+);
+
+// ── General API rate limit: 200 requests per 15 minutes per IP ────────────────
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please slow down." },
+});
+
+// ── Request logging ───────────────────────────────────────────────────────────
 app.use(
   pinoHttp({
     logger,
@@ -20,20 +69,34 @@ app.use(
         };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
       },
     },
   }),
 );
 
-app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware);
 
-app.use("/api", router);
+app.use("/api", apiLimiter, router);
+
+// ── Global error handler ──────────────────────────────────────────────────────
+// Returns a generic message to the client; full detail is logged server-side only.
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  logger.error({ err }, "Unhandled application error");
+  if (res.headersSent) return;
+  const errObj = err as { status?: number; statusCode?: number };
+  const status =
+    typeof errObj?.status === "number"
+      ? errObj.status
+      : typeof errObj?.statusCode === "number"
+        ? errObj.statusCode
+        : 500;
+  res.status(status >= 400 && status < 600 ? status : 500).json({
+    error: "An internal server error occurred.",
+  });
+});
 
 export default app;

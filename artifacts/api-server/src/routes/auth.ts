@@ -3,6 +3,7 @@ import { db, systemUsersTable, departmentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import {
   clearSession,
   createSession,
@@ -13,16 +14,59 @@ import {
 
 const router: IRouter = Router();
 
+// ── Auth-specific rate limit: 5 attempts per 15 minutes per email or IP ───────
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts. Please try again in 15 minutes." },
+  keyGenerator: (req) => {
+    const email = (req.body?.email as string | undefined)?.toLowerCase().trim();
+    return email ? `login:${email}` : `ip:${req.ip ?? "unknown"}`;
+  },
+});
+
+// ── In-memory account lockout tracker ─────────────────────────────────────────
+// For multi-instance deployments, replace with Redis or a DB-backed store.
+const failedAttempts = new Map<string, { count: number; lockUntil: number }>();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function recordFailure(key: string): void {
+  const rec = failedAttempts.get(key) ?? { count: 0, lockUntil: 0 };
+  rec.count += 1;
+  if (rec.count >= MAX_ATTEMPTS) {
+    rec.lockUntil = Date.now() + LOCKOUT_MS;
+  }
+  failedAttempts.set(key, rec);
+}
+
+function isLocked(key: string): { locked: boolean; waitMin: number } {
+  const rec = failedAttempts.get(key);
+  if (!rec || Date.now() >= rec.lockUntil) return { locked: false, waitMin: 0 };
+  return {
+    locked: true,
+    waitMin: Math.ceil((rec.lockUntil - Date.now()) / 60_000),
+  };
+}
+
+function clearFailures(key: string): void {
+  failedAttempts.delete(key);
+}
+
+// ── Schemas ───────────────────────────────────────────────────────────────────
 const loginSchema = z.object({
   email: z.string().min(1),
   password: z.string().min(1),
 });
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function setSessionCookie(res: Response, sid: string) {
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: SESSION_TTL,
   });
@@ -53,13 +97,14 @@ async function buildUserPayload(userId: number) {
   };
 }
 
+// ── Routes ────────────────────────────────────────────────────────────────────
 router.get("/auth/user", async (req: Request, res: Response) => {
   if (!req.user) { res.json({ user: null }); return; }
   const user = await buildUserPayload(req.user.id);
   res.json({ user });
 });
 
-router.post("/auth/login", async (req: Request, res: Response) => {
+router.post("/auth/login", loginLimiter, async (req: Request, res: Response) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Email and password are required" });
@@ -67,23 +112,40 @@ router.post("/auth/login", async (req: Request, res: Response) => {
   }
 
   const { email, password } = parsed.data;
+  const lockKey = email.toLowerCase().trim();
+
+  // Check account lockout
+  const { locked, waitMin } = isLocked(lockKey);
+  if (locked) {
+    res.status(429).json({
+      error: `Account temporarily locked. Try again in ${waitMin} minute(s).`,
+    });
+    return;
+  }
 
   const [sysUser] = await db
     .select()
     .from(systemUsersTable)
-    .where(eq(systemUsersTable.username, email.toLowerCase().trim()))
+    .where(eq(systemUsersTable.username, lockKey))
     .limit(1);
 
   if (!sysUser) {
+    recordFailure(lockKey);
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
 
   const valid = await bcrypt.compare(password, sysUser.passwordHash);
   if (!valid) {
-    res.status(401).json({ error: "Invalid email or password" });
+    recordFailure(lockKey);
+    const remaining = MAX_ATTEMPTS - (failedAttempts.get(lockKey)?.count ?? 0);
+    const hint = remaining > 0 ? ` (${remaining} attempt(s) remaining)` : " — account is now locked for 15 minutes";
+    res.status(401).json({ error: `Invalid email or password${hint}` });
     return;
   }
+
+  // Successful login — clear failure record
+  clearFailures(lockKey);
 
   const sessionUser = {
     id: sysUser.id,
@@ -95,7 +157,6 @@ router.post("/auth/login", async (req: Request, res: Response) => {
 
   const sid = await createSession({ user: sessionUser });
   setSessionCookie(res, sid);
-  // Return fresh payload (with departmentName) so the client has it immediately
   const freshUser = await buildUserPayload(sysUser.id);
   res.json({ user: freshUser });
 });

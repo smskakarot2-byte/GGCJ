@@ -6,9 +6,17 @@ import bcrypt from "bcryptjs";
 
 const router: IRouter = Router();
 
+const STRONG_PASSWORD = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
 const createUserSchema = z.object({
   username: z.string().min(2).max(80),
-  password: z.string().min(4),
+  password: STRONG_PASSWORD,
   fullName: z.string().min(1).max(200).default(""),
   role: z.enum(["admin", "professor"]).default("professor"),
   departmentId: z.number().int().nullable().optional(),

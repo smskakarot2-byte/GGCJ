@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, resultsTable, studentsTable, coursesTable, departmentsTable, systemUsersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { decryptField } from "../lib/crypto";
 import { computeGPA } from "../lib/grading";
 import fs from "fs";
 import path from "path";

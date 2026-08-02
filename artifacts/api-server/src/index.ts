@@ -16,17 +16,27 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 async function seedAdmin() {
-  const adminEmail = "smskakarot@gmail.com";
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    logger.warn(
+      "ADMIN_EMAIL or ADMIN_PASSWORD not set — admin auto-seed skipped. " +
+      "Set both env vars if you need to create the initial admin account.",
+    );
+    return;
+  }
+
   const existing = await db
     .select()
     .from(systemUsersTable)
-    .where(eq(systemUsersTable.username, adminEmail))
+    .where(eq(systemUsersTable.username, adminEmail.toLowerCase().trim()))
     .limit(1);
 
   if (!existing.length) {
-    const passwordHash = await bcrypt.hash("GCUF2025", 10);
+    const passwordHash = await bcrypt.hash(adminPassword, 12);
     await db.insert(systemUsersTable).values({
-      username: adminEmail,
+      username: adminEmail.toLowerCase().trim(),
       passwordHash,
       role: "admin",
       fullName: "Administrator",

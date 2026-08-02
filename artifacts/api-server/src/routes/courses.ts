@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import multer from "multer";
+import { encryptField } from "../lib/crypto";
 import { db, coursesTable, studentsTable, resultsTable, departmentsTable, systemUsersTable } from "@workspace/db";
 import { eq, count, avg, countDistinct, sql, and } from "drizzle-orm";
 import { parseAwardSheet } from "../lib/pdfParser";
@@ -7,7 +8,19 @@ import { parseCreditHours } from "../lib/grading";
 import { computeGrade } from "../lib/grading";
 
 const router: IRouter = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+  fileFilter(_req, file, cb) {
+    const validMime = file.mimetype === "application/pdf";
+    const validExt = file.originalname.toLowerCase().endsWith(".pdf");
+    if (!validMime || !validExt) {
+      cb(new Error("Only PDF files are accepted"));
+      return;
+    }
+    cb(null, true);
+  },
+});
 
 // GET /courses
 router.get("/courses", async (req: Request, res: Response) => {

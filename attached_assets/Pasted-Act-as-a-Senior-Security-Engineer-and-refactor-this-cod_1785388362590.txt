@@ -1,0 +1,19 @@
+Act as a Senior Security Engineer and refactor this codebase to resolve critical security vulnerabilities. Implement the following changes strictly:
+Remove Hardcoded Credentials: Immediately remove any hardcoded admin passwords (specifically "GCUF2025") from the source code. Replace this with environment variable usage (.env) for all secrets and default admin credentials, ensuring no secrets are committed to the repo.
+Harden CORS Configuration: Replace the current origin: '*' CORS setting with a strict whitelist of allowed origins based on environment variables. Ensure credentials are only allowed from trusted domains.
+Implement Rate Limiting: Install and configure express-rate-limit. Apply strict limits to authentication routes (e.g., 5 attempts per 15 minutes) and general API routes to prevent brute-force and DoS attacks.
+Add CSRF Protection: Install and configure csurf (or equivalent). Generate CSRF tokens for session-based requests and enforce validation on all state-changing HTTP verbs (POST, PUT, DELETE, PATCH).
+Strengthen Authentication & Session Security:
+Enforce a strong password policy (minimum 8 characters, requiring uppercase, lowercase, number, and special character).
+Reduce session lifetime from 7 days to 1 hour (or 24h max with refresh tokens).
+Set cookie flags to httpOnly, secure (in production), and SameSite: 'strict'.
+Implement account lockout logic after 5 failed login attempts.
+Secure File Uploads: Refactor the file upload middleware to strictly validate MIME types and file extensions (allow only PDFs). Implement file size limits and sanitize filenames to prevent directory traversal or execution.
+Fix SQL Injection Risks: Audit all database queries. Replace any raw SQL strings with parameterized queries or use the ORM's built-in sanitization methods to prevent injection.
+Add Security Headers: Install and configure helmet to automatically set secure HTTP headers (X-Content-Type-Options, X-Frame-Options, etc.).
+Sanitize Error Handling & Logging:
+Implement a global error handler that returns generic error messages to the client while logging detailed stack traces server-side only.
+Ensure sensitive data (passwords, CNIC numbers) is redacted from all application logs.
+Replace custom XSS escaping functions with a robust library like DOMPurify (if frontend) or proper output encoding.
+Data Protection: Ensure PII like CNIC numbers is encrypted at rest (using crypto module) before being stored in the database, rather than storing them in plaintext.
+After implementing these fixes, update the .env.example file to reflect all new required environment variables and provide a brief summary of the changes made.
