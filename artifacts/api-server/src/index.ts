@@ -33,8 +33,8 @@ async function seedAdmin() {
     .where(eq(systemUsersTable.username, adminEmail.toLowerCase().trim()))
     .limit(1);
 
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
   if (!existing.length) {
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
     await db.insert(systemUsersTable).values({
       username: adminEmail.toLowerCase().trim(),
       passwordHash,
@@ -42,6 +42,13 @@ async function seedAdmin() {
       fullName: "Administrator",
     });
     logger.info("Admin user seeded");
+  } else {
+    // Always sync password from env var so rotating ADMIN_PASSWORD takes effect on restart
+    await db
+      .update(systemUsersTable)
+      .set({ passwordHash })
+      .where(eq(systemUsersTable.username, adminEmail.toLowerCase().trim()));
+    logger.info("Admin password synced from env");
   }
 }
 
