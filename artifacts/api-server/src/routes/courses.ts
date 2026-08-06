@@ -256,8 +256,8 @@ router.post("/courses/upload", upload.single("file"), async (req: Request, res: 
       try {
         const [student] = await db
           .insert(studentsTable)
-          .values({ rollNo: s.rollNo, name: s.name, fatherName: s.fatherName, cnic: s.cnic, session: s.session || header.session || "", departmentId })
-          .onConflictDoUpdate({ target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId], set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic } })
+          .values({ rollNo: s.rollNo, name: s.name, fatherName: s.fatherName, cnic: encryptField(s.cnic ?? ""), session: s.session || header.session || "", departmentId })
+          .onConflictDoUpdate({ target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId], set: { name: s.name, fatherName: s.fatherName, cnic: encryptField(s.cnic ?? "") } })
           .returning();
         await db.insert(resultsTable).values({
           studentId: student.id, courseId,
@@ -306,13 +306,13 @@ router.post("/courses/upload", upload.single("file"), async (req: Request, res: 
           rollNo: s.rollNo,
           name: s.name,
           fatherName: s.fatherName,
-          cnic: s.cnic,
+          cnic: encryptField(s.cnic ?? ""),
           session: s.session || header.session || "",
           departmentId,
         })
         .onConflictDoUpdate({
           target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId],
-          set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic },
+          set: { name: s.name, fatherName: s.fatherName, cnic: encryptField(s.cnic ?? "") },
         })
         .returning();
 
@@ -555,13 +555,13 @@ router.post("/courses/bulk-upload", upload.array("files", 60), async (req: Reque
               rollNo: s.rollNo,
               name: s.name,
               fatherName: s.fatherName,
-              cnic: s.cnic,
+              cnic: encryptField(s.cnic ?? ""),
               session: s.session || header.session || "",
               departmentId,
             })
             .onConflictDoUpdate({
               target: [studentsTable.rollNo, studentsTable.session, studentsTable.departmentId],
-              set: { name: s.name, fatherName: s.fatherName, cnic: s.cnic },
+              set: { name: s.name, fatherName: s.fatherName, cnic: encryptField(s.cnic ?? "") },
             })
             .returning();
           await db

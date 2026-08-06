@@ -63,7 +63,7 @@ router.get("/results/course/:courseId", async (req: Request, res: Response) => {
     .where(eq(resultsTable.courseId, courseId))
     .orderBy(studentsTable.rollNo);
 
-  res.json(rows);
+  res.json(rows.map((r) => ({ ...r, cnic: decryptField(r.cnic) })));
 });
 
 router.get("/results/sessions", async (_req: Request, res: Response) => {
@@ -165,11 +165,11 @@ router.get("/results/student", async (req: Request, res: Response) => {
       rollNo: student.rollNo,
       name: student.name,
       fatherName: student.fatherName,
-      cnic: student.cnic,
+      cnic: decryptField(student.cnic),
       session: student.session,
       departmentName: deptRow[0]?.name ?? null,
     },
-    results: resultRows,
+    results: resultRows.map((r) => ({ ...r, cnic: decryptField(r.cnic) })),
     cgpa,
     totalCredits,
     passCount,
@@ -190,7 +190,7 @@ router.get("/results/transcript/:rollNo", async (req: Request, res: Response) =>
 
   const studentRows = await db.select().from(studentsTable).where(and(...conditions)).limit(1);
   if (!studentRows.length) { res.status(404).json({ error: "Student not found" }); return; }
-  const student = studentRows[0];
+  const student = { ...studentRows[0], cnic: decryptField(studentRows[0].cnic) };
 
   const resultRows = await db
     .select({

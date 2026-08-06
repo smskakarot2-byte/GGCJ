@@ -3,7 +3,7 @@ import { db, systemUsersTable, departmentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import {
   clearSession,
   createSession,
@@ -23,7 +23,7 @@ const loginLimiter = rateLimit({
   message: { error: "Too many login attempts. Please try again in 15 minutes." },
   keyGenerator: (req) => {
     const email = (req.body?.email as string | undefined)?.toLowerCase().trim();
-    return email ? `login:${email}` : `ip:${req.ip ?? "unknown"}`;
+    return email ? `login:${email}` : `ip:${ipKeyGenerator(req)}`;
   },
 });
 
