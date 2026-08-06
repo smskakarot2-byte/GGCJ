@@ -1,0 +1,2 @@
+- [DB dist stale after schema changes](db-dist-stale.md) — lib/db/dist/schema/gcuf.d.ts must be manually patched when schema adds columns; drizzle-zod 0.8.3 uses Zod v4 APIs so tsc rebuild of lib/db fails
+- [Express 5 params typing](express5-params.md) — req.params values typed as string | string[] in Express 5; use `as string` cast before parseInt or string ops
