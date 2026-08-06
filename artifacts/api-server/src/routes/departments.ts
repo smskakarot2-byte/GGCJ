@@ -31,7 +31,7 @@ router.post("/departments", async (req: Request, res: Response) => {
 // PATCH /departments/:id  (admin only)
 router.patch("/departments/:id", async (req: Request, res: Response) => {
   if (!requireAdmin(req, res)) return;
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const parsed = nameSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Invalid name" }); return; }
@@ -43,7 +43,7 @@ router.patch("/departments/:id", async (req: Request, res: Response) => {
 // DELETE /departments/:id  (admin only)
 router.delete("/departments/:id", async (req: Request, res: Response) => {
   if (!requireAdmin(req, res)) return;
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   await db.delete(departmentsTable).where(eq(departmentsTable.id, id));
   res.status(204).send();

@@ -129,7 +129,7 @@ router.patch("/users/:id", async (req: Request, res: Response) => {
     return;
   }
 
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
@@ -184,7 +184,7 @@ router.delete("/users/:id", async (req: Request, res: Response) => {
     return;
   }
 
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;

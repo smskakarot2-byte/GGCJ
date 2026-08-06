@@ -94,7 +94,7 @@ router.get("/courses", async (req: Request, res: Response) => {
 // GET /courses/:id
 router.get("/courses/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const [row] = await db
@@ -136,7 +136,7 @@ router.get("/courses/:id", async (req: Request, res: Response) => {
 // DELETE /courses/:id
 router.delete("/courses/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   await db.delete(coursesTable).where(eq(coursesTable.id, id));
   res.status(204).send();
@@ -145,7 +145,7 @@ router.delete("/courses/:id", async (req: Request, res: Response) => {
 // PATCH /courses/:id — update isCore flag
 router.patch("/courses/:id", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const { isCore } = req.body;
   if (typeof isCore !== "boolean") { res.status(400).json({ error: "isCore (boolean) required" }); return; }

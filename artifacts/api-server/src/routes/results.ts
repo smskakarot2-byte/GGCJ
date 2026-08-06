@@ -20,7 +20,7 @@ const router: IRouter = Router();
 
 router.get("/results/course/:courseId", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const courseId = parseInt(req.params.courseId);
+  const courseId = parseInt(req.params.courseId as string);
   if (isNaN(courseId)) { res.status(400).json({ error: "Invalid courseId" }); return; }
 
   // Professors may only view results for courses in their own department
@@ -179,14 +179,15 @@ router.get("/results/student", async (req: Request, res: Response) => {
 });
 
 router.get("/results/transcript/:rollNo", async (req: Request, res: Response) => {
-  const rollNo = req.params.rollNo;
+  const rollNo = req.params.rollNo as string;
   const session = req.query.session as string | undefined;
   const deptIdParam = req.query.departmentId as string | undefined;
   const departmentId = deptIdParam ? parseInt(deptIdParam) : undefined;
 
-  const conditions = [eq(studentsTable.rollNo, rollNo)];
+  const conditions: ReturnType<typeof eq>[] = [eq(studentsTable.rollNo, rollNo)];
   if (session) conditions.push(eq(studentsTable.session, session));
-  if (departmentId && !isNaN(departmentId)) conditions.push(eq(studentsTable.departmentId, departmentId));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (departmentId && !isNaN(departmentId)) conditions.push(eq(studentsTable.departmentId, departmentId as any));
 
   const studentRows = await db.select().from(studentsTable).where(and(...conditions)).limit(1);
   if (!studentRows.length) { res.status(404).json({ error: "Student not found" }); return; }

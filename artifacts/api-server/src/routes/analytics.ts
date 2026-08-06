@@ -76,7 +76,7 @@ router.get("/analytics/overview", async (req: Request, res: Response) => {
   const total = allResults.length;
   const passed = allResults.filter((r) => r.status === "Pass").length;
 
-  res.json({
+  return res.json({
     departmentCount: deptCount?.n ?? 0,
     courseCount: courseCount?.n ?? 0,
     studentCount: studentCount?.n ?? 0,
