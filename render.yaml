@@ -12,19 +12,25 @@ services:
     name: gcuf-api-server
     runtime: node
     plan: free
-    buildCommand: pnpm install && pnpm --filter api-server build
-    startCommand: node artifacts/api-server/dist/index.mjs
+    buildCommand: pnpm install && cd artifacts/api-server && pnpm run build
+    startCommand: cd artifacts/api-server && pnpm run start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: gcuf-db
           property: connectionString
-      - key: SESSION_SECRET
-        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
         value: "8080"
+      - key: SESSION_SECRET
+        generateValue: true
       - key: FRONTEND_URL
         value: https://gcuf-web.onrender.com
 
