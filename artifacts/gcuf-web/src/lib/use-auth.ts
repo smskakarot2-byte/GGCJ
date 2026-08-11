@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { createElement } from "react";
 
+// Get the API URL from environment variable (set in Netlify dashboard)
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export interface AuthUser {
   id: number;
   username: string;
@@ -34,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setIsLoading(true);
 
-    fetch("/api/auth/user", { credentials: "include" })
+    fetch(`${API_URL}/api/auth/user`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : { user: null }))
       .then((data: { user: AuthUser | null }) => {
         if (!cancelled) {
@@ -54,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -72,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", {
+    await fetch(`${API_URL}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     }).catch(() => {});
