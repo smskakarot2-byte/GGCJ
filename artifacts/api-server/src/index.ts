@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { db, systemUsersTable } from "@workspace/db";
+import { db, pool, systemUsersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -13,6 +13,61 @@ if (!rawPort) {
 const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+// Ensure required tables exist at runtime. This is a lightweight, idempotent fix
+// for hosting environments (like Render free tier) where manual CLI migrations
+// are not possible. We create only the minimal core tables the app expects on
+// startup so the admin seeding and session storage won't fail.
+async function ensureSchema(): Promise<void> {
+  const sql = `
+  CREATE TABLE IF NOT EXISTS departments (
+    id serial PRIMARY KEY,
+    name text NOT NULL UNIQUE,
+    created_at timestamptz NOT NULL DEFAULT now()
+  );
+
+  CREATE TABLE IF NOT EXISTS system_users (
+    id serial PRIMARY KEY,
+    username text NOT NULL UNIQUE,
+    password_hash text NOT NULL,
+    role text NOT NULL DEFAULT 'professor',
+    full_name text NOT NULL DEFAULT '',
+    department_id integer REFERENCES departments(id) ON DELETE SET NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  );
+
+  CREATE TABLE IF NOT EXISTS sessions (
+    sid varchar PRIMARY KEY,
+    sess jsonb NOT NULL,
+    expire timestamptz NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_session_expire ON sessions (expire);
+
+  CREATE TABLE IF NOT EXISTS users (
+    id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+    email varchar UNIQUE,
+    first_name varchar,
+    last_name varchar,
+    profile_image_url varchar,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+  );
+  `;
+
+  try {
+    // Run as a single multi-statement query. node-postgres (used by the pool)
+    // supports sending multiple statements in one query string when not in
+    // prepared statements mode. This keeps startup fast and idempotent.
+    await pool.query(sql);
+    logger.info("Database schema ensured (CREATE TABLE IF NOT EXISTS executed)");
+  } catch (err) {
+    // Log and rethrow — failing to ensure schema should stop startup so the
+    // platform operator can inspect logs.
+    logger.error({ err }, "Failed to ensure DB schema");
+    throw err;
+  }
 }
 
 async function seedAdmin() {
@@ -52,8 +107,12 @@ async function seedAdmin() {
   }
 }
 
-seedAdmin()
-  .then(() => {
+// Start sequence: ensure schema → seed admin → start server
+(async function main() {
+  try {
+    await ensureSchema();
+    await seedAdmin();
+
     app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");
@@ -61,8 +120,8 @@ seedAdmin()
       }
       logger.info({ port }, "Server listening");
     });
-  })
-  .catch((err) => {
-    logger.error({ err }, "Failed to seed admin");
+  } catch (err) {
+    logger.error({ err }, "Startup failed");
     process.exit(1);
-  });
+  }
+})();
