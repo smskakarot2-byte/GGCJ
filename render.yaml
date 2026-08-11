@@ -26,13 +26,15 @@ services:
       - key: PORT
         value: "8080"
       - key: FRONTEND_URL
-        fromStaticSite:
+        fromService:
+          type: web
           name: gcuf-web
           property: url
 
-  # 2. Frontend React/Vite Website
-  - type: static
+  # 2. Frontend React/Vite Website (Static)
+  - type: web
     name: gcuf-web
+    runtime: static
     plan: free
     buildCommand: pnpm install && pnpm --filter gcuf-web build
     staticPublishPath: artifacts/gcuf-web/dist
