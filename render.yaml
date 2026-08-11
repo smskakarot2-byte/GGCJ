@@ -32,7 +32,6 @@ services:
   - type: web
     name: gcuf-web
     runtime: static
-    plan: free
     buildCommand: pnpm install && pnpm --filter gcuf-web build
     staticPublishPath: artifacts/gcuf-web/dist
     routes:
