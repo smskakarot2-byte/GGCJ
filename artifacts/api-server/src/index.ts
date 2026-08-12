@@ -136,7 +136,8 @@ async function seedAdmin() {
       app.use(express.static(frontendBuildPath));
       
       // Catch-all route for React Router - serves index.html for all non-API routes
-      app.get("*", (req, res) => {
+      // Express 5.x requires named wildcard parameter instead of just "*"
+      app.get("/*path", (req, res) => {
         res.sendFile(path.join(frontendBuildPath, "index.html"));
       });
     }
