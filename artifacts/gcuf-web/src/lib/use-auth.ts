@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { createElement } from "react";
 
-// Get the API URL from environment variable (set in Netlify dashboard)
-const API_URL = import.meta.env.VITE_API_URL || '';
+// Since frontend and backend are served from the same origin on Render,
+// we use relative URLs (empty string) for all API calls
+const API_URL = '';
 
 export interface AuthUser {
   id: number;
