@@ -133,12 +133,36 @@ async function seedAdmin() {
     // This allows the Express server to serve both API and UI from the same origin
     if (isProduction) {
       logger.info({ frontendBuildPath }, "Serving static frontend files");
-      app.use(express.static(frontendBuildPath));
       
-      // Catch-all route for React Router - serves index.html for all non-API routes
-      // Express 5.x requires named wildcard parameter instead of just "*"
-      app.get("/*path", (req, res) => {
-        res.sendFile(path.join(frontendBuildPath, "index.html"));
+      // Add static middleware for non-API routes - must be added before error handler
+      // We use a custom middleware to handle SPA routing properly
+      app.use((req, res, next) => {
+        // Skip for API routes - let them pass through to API handlers
+        if (req.path.startsWith('/api')) {
+          return next();
+        }
+        
+        // For non-API routes, check if the file exists in the static build
+        const send = res.sendFile.bind(res);
+        const filePath = path.join(frontendBuildPath, req.path);
+        
+        // Check if it's a direct file request (has extension and exists)
+        const hasExtension = /\.[a-zA-Z0-9]+$/.test(req.path);
+        
+        if (hasExtension) {
+          // Try to serve the static file
+          return send(filePath, (err?: any) => {
+            if (err && err.code === 'ENOENT') {
+              // File not found, serve index.html for SPA fallback
+              send(path.join(frontendBuildPath, 'index.html'));
+            } else {
+              next();
+            }
+          });
+        } else {
+          // No extension (SPA route), serve index.html
+          return send(path.join(frontendBuildPath, 'index.html'));
+        }
       });
     }
 
