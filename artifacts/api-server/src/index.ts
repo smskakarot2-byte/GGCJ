@@ -3,6 +3,13 @@ import { logger } from "./lib/logger";
 import { db, pool, systemUsersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import path from "path";
+import { fileURLToPath } from "url";
+import express from "express";
+
+// ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +21,15 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+// Determine the path to the frontend build folder
+// When running from artifacts/api-server/dist/index.mjs, we need to:
+// 1. Go up from dist/ to api-server/ (../)
+// 2. Go up from api-server/ to artifacts/ (../)  
+// 3. Go up from artifacts/ to workspace root (../)
+// 4. Then go to artifacts/gcuf-web/dist/public
+const isProduction = process.env.NODE_ENV === "production";
+const frontendBuildPath = path.join(__dirname, "../../../artifacts/gcuf-web/dist/public");
 
 // Ensure required tables exist at runtime. This is a lightweight, idempotent fix
 // for hosting environments (like Render free tier) where manual CLI migrations
@@ -112,6 +128,18 @@ async function seedAdmin() {
   try {
     await ensureSchema();
     await seedAdmin();
+
+    // Serve static frontend files in production (after API routes are set up in app.ts)
+    // This allows the Express server to serve both API and UI from the same origin
+    if (isProduction) {
+      logger.info({ frontendBuildPath }, "Serving static frontend files");
+      app.use(express.static(frontendBuildPath));
+      
+      // Catch-all route for React Router - serves index.html for all non-API routes
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(frontendBuildPath, "index.html"));
+      });
+    }
 
     app.listen(port, (err) => {
       if (err) {
