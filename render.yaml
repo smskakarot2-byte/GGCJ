@@ -7,13 +7,13 @@ databases:
     plan: free
 
 services:
-  # 1. Backend Express API Server
+  # Single Unified Web Service (Backend + Frontend)
   - type: web
-    name: gcuf-api-server
+    name: gcuf-unified
     runtime: node
     plan: free
-    buildCommand: pnpm install && cd artifacts/api-server && pnpm run build
-    startCommand: cd artifacts/api-server && pnpm run start
+    buildCommand: pnpm install && pnpm --filter @workspace/gcuf-web run build && pnpm --filter @workspace/api-server run build
+    startCommand: pnpm --filter @workspace/api-server run start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -23,27 +23,13 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      - key: CORS_ORIGIN
-        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
         value: "8080"
       - key: SESSION_SECRET
         generateValue: true
-      - key: FRONTEND_URL
-        value: https://gcuf-web.onrender.com
-
-  # 2. Frontend React/Vite Website (Static)
-  - type: web
-    name: gcuf-web
-    runtime: static
-    buildCommand: pnpm install && pnpm --filter gcuf-web build
-    staticPublishPath: artifacts/gcuf-web/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        value: https://gcuf-api-server.onrender.com
+      - key: ALLOWED_ORIGINS
+        # Set this to your Render URL (e.g., https://gcuf-unified.onrender.com)
+        # or leave empty to allow all origins in development
+        sync: false
