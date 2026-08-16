@@ -158,6 +158,7 @@ export default function AdvancedSearch() {
         <CardContent>
           <div className="flex gap-2">
             <Input
+              id="search-input"
               placeholder="Search by name or roll number..."
               value={filters.name || filters.rollNo || ""}
               onChange={(e) => {
@@ -190,8 +191,9 @@ export default function AdvancedSearch() {
           {showFilters && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t">
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Session</label>
+                <label htmlFor="session-filter" className="text-xs font-medium text-muted-foreground mb-1 block">Session</label>
                 <Input
+                  id="session-filter"
                   placeholder="e.g., 2023-2027"
                   value={filters.session || ""}
                   onChange={(e) => updateFilter("session", e.target.value)}
@@ -199,8 +201,9 @@ export default function AdvancedSearch() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Course Code</label>
+                <label htmlFor="course-code-filter" className="text-xs font-medium text-muted-foreground mb-1 block">Course Code</label>
                 <Input
+                  id="course-code-filter"
                   placeholder="e.g., CS-101"
                   value={filters.courseCode || ""}
                   onChange={(e) => updateFilter("courseCode", e.target.value)}
@@ -208,8 +211,9 @@ export default function AdvancedSearch() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+                <label htmlFor="status-filter" className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
                 <select
+                  id="status-filter"
                   value={filters.status || ""}
                   onChange={(e) => updateFilter("status", e.target.value || undefined)}
                   className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background"
@@ -223,6 +227,7 @@ export default function AdvancedSearch() {
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Grade Point Range</label>
                 <div className="flex gap-2">
                   <Input
+                    id="grade-min-filter"
                     type="number"
                     step="0.1"
                     min="0"
@@ -234,6 +239,7 @@ export default function AdvancedSearch() {
                     size="sm"
                   />
                   <Input
+                    id="grade-max-filter"
                     type="number"
                     step="0.1"
                     min="0"
