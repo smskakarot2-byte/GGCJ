@@ -23,6 +23,7 @@ interface SearchResult {
   rollNo: string;
   name: string;
   fatherName: string;
+  cnic?: string;
   session: string;
   departmentName: string;
   courseCode: string;
@@ -316,12 +317,10 @@ export default function AdvancedSearch() {
                     <tr className="border-b">
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground">Roll No</th>
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground">Name</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden md:table-cell">Session</th>
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">CNIC</th>
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden md:table-cell">Father Name</th>
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden lg:table-cell">Department</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Course</th>
-                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">%</th>
-                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Grade</th>
-                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden xl:table-cell">Session</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -330,34 +329,11 @@ export default function AdvancedSearch() {
                         <td className="py-2 px-3 font-mono text-xs">{result.rollNo}</td>
                         <td className="py-2 px-3">
                           <div className="font-medium">{result.name}</div>
-                          <div className="text-xs text-muted-foreground hidden sm:block">{result.fatherName}</div>
                         </td>
-                        <td className="py-2 px-3 hidden md:table-cell">{result.session}</td>
+                        <td className="py-2 px-3 text-xs">{result.cnic || "N/A"}</td>
+                        <td className="py-2 px-3 hidden md:table-cell text-xs">{result.fatherName}</td>
                         <td className="py-2 px-3 hidden lg:table-cell text-xs">{result.departmentName}</td>
-                        <td className="py-2 px-3">
-                          <div className="font-medium text-xs">{result.courseCode}</div>
-                          <div className="text-xs text-muted-foreground truncate max-w-[150px]">{result.courseTitle}</div>
-                        </td>
-                        <td className={`py-2 px-3 text-center font-medium ${
-                          result.percentage >= 80 ? "text-emerald-600" : 
-                          result.percentage >= 60 ? "text-blue-600" : 
-                          result.percentage >= 40 ? "text-yellow-600" : "text-red-600"
-                        }`}>
-                          {result.percentage.toFixed(1)}%
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <Badge variant="outline" className="text-xs">
-                            {result.grade}
-                          </Badge>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <Badge 
-                            variant={result.status === "Pass" ? "default" : "destructive"} 
-                            className="text-xs"
-                          >
-                            {result.status}
-                          </Badge>
-                        </td>
+                        <td className="py-2 px-3 hidden xl:table-cell text-xs">{result.session}</td>
                       </tr>
                     ))}
                   </tbody>
