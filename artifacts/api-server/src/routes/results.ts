@@ -178,9 +178,10 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  // Build the query - select all needed fields first
+  // Build the query with proper DISTINCT to avoid duplicates
+  // Use a subquery approach to get unique student-course combinations
   const baseQuery = db
-    .select({
+    .selectDistinct({
       id: resultsTable.id,
       studentId: studentsTable.id,
       rollNo: studentsTable.rollNo,

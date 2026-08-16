@@ -7,6 +7,12 @@ __pycache__/
 dist/
 build/
 target/
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
 # Dependencies
 .venv/
@@ -27,6 +33,10 @@ zig*/
 .env
 .env.local
 .env.*
+.julia/
+zig-cache/
+zig-out/
+.deps/
 
 # Editors
 .vscode/
@@ -38,7 +48,11 @@ zig*/
 .DS_Store
 Thumbs.db
 
-# Coverage
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage and testing
 coverage/
 htmlcov/
 .coverage
