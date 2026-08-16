@@ -124,7 +124,23 @@ export default function LandingPage({ onStaffLogin }: LandingPageProps) {
 
   useEffect(() => {
     fetch("/api/departments").then((r) => r.json()).then(setDepartments).catch(() => {});
-    fetch("/api/results/sessions").then((r) => r.json()).then(setSessions).catch(() => {});
+    fetch("/api/results/sessions")
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to fetch sessions");
+        return r.json();
+      })
+      .then((data) => {
+        // Ensure data is an array before setting
+        if (Array.isArray(data)) {
+          setSessions(data);
+        } else {
+          setSessions([]);
+        }
+      })
+      .catch(() => {
+        // Silently fail - sessions dropdown will be empty but app won't crash
+        setSessions([]);
+      });
   }, []);
 
   async function handleLookup() {

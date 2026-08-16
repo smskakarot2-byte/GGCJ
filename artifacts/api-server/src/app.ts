@@ -48,6 +48,9 @@ app.use(
 );
 
 // ── General API rate limit: 200 requests per 15 minutes per IP ────────────────
+// Enable trust proxy for Render deployment to correctly identify users behind reverse proxy
+app.set("trust proxy", true);
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
