@@ -1,10 +1,11 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, resultsTable, studentsTable, coursesTable, departmentsTable, systemUsersTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lte, like, or, desc, asc, SQL } from "drizzle-orm";
 import { decryptField } from "../lib/crypto";
 import { computeGPA } from "../lib/grading";
 import fs from "fs";
 import path from "path";
+import { z } from "zod";
 
 // Embed the college logo once at startup so every transcript request has it ready
 let LOGO_DATA_URI = "";
@@ -69,6 +70,186 @@ router.get("/results/course/:courseId", async (req: Request, res: Response) => {
 router.get("/results/sessions", async (_req: Request, res: Response) => {
   const rows = await db.selectDistinct({ session: studentsTable.session }).from(studentsTable).orderBy(studentsTable.session);
   res.json(rows.map((r) => r.session).filter(Boolean).sort());
+});
+
+// Advanced Search Endpoint for Admin and Professors
+router.get("/results/search", async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) { 
+    res.status(401).json({ error: "Unauthorized" }); 
+    return; 
+  }
+
+  const user = req.user as { id: number; role: string; departmentId?: number };
+
+  // Validation schema
+  const querySchema = z.object({
+    name: z.string().optional(),
+    rollNo: z.string().optional(),
+    cnic: z.string().optional(),
+    session: z.string().optional(),
+    departmentId: z.string().optional(),
+    courseCode: z.string().optional(),
+    gradeMin: z.string().optional(),
+    gradeMax: z.string().optional(),
+    status: z.string().optional(),
+    sortBy: z.enum(["name", "rollNo", "grade", "session"]).optional().default("rollNo"),
+    sortOrder: z.enum(["asc", "desc"]).optional().default("asc"),
+    page: z.string().optional().default("1"),
+    limit: z.string().optional().default("50"),
+  });
+
+  const parsed = querySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid query parameters", details: parsed.error.errors });
+    return;
+  }
+
+  const {
+    name,
+    rollNo,
+    cnic,
+    session,
+    departmentId: deptFilter,
+    courseCode,
+    gradeMin,
+    gradeMax,
+    status,
+    sortBy,
+    sortOrder,
+    page: pageStr,
+    limit: limitStr,
+  } = parsed.data;
+
+  const page = parseInt(pageStr);
+  const limit = Math.min(parseInt(limitStr), 100); // Max 100 per page
+  const offset = (page - 1) * limit;
+
+  // Build WHERE conditions
+  const conditions: SQL[] = [];
+
+  // Professor restriction: can only see their own department
+  if (user.role === "professor") {
+    if (!user.departmentId) {
+      res.status(403).json({ error: "Professor has no department assigned" });
+      return;
+    }
+    conditions.push(eq(studentsTable.departmentId, user.departmentId));
+  }
+
+  // Apply filters
+  if (name && name.trim()) {
+    conditions.push(like(studentsTable.name, `%${name.trim()}%`));
+  }
+  if (rollNo && rollNo.trim()) {
+    conditions.push(like(studentsTable.rollNo, `%${rollNo.trim()}%`));
+  }
+  if (cnic && cnic.trim()) {
+    // CNIC is encrypted, so we need to decrypt and compare in application logic
+    // For now, skip CNIC filter or implement decryption-based filtering
+  }
+  if (session && session.trim()) {
+    conditions.push(eq(studentsTable.session, session.trim()));
+  }
+  if (deptFilter && deptFilter.trim()) {
+    const deptId = parseInt(deptFilter);
+    if (!isNaN(deptId)) {
+      // Admins can filter by any department, professors are already restricted above
+      if (user.role === "admin") {
+        conditions.push(eq(studentsTable.departmentId, deptId));
+      }
+    }
+  }
+  if (courseCode && courseCode.trim()) {
+    conditions.push(like(coursesTable.code, `%${courseCode.trim()}%`));
+  }
+  if (status && status.trim()) {
+    conditions.push(eq(resultsTable.status, status.trim()));
+  }
+  if (gradeMin) {
+    const minGp = parseFloat(gradeMin);
+    if (!isNaN(minGp)) {
+      conditions.push(gte(resultsTable.gradePoint, minGp));
+    }
+  }
+  if (gradeMax) {
+    const maxGp = parseFloat(gradeMax);
+    if (!isNaN(maxGp)) {
+      conditions.push(lte(resultsTable.gradePoint, maxGp));
+    }
+  }
+
+  // Build the query
+  let query = db
+    .select({
+      id: resultsTable.id,
+      studentId: studentsTable.id,
+      rollNo: studentsTable.rollNo,
+      name: studentsTable.name,
+      fatherName: studentsTable.fatherName,
+      cnic: studentsTable.cnic,
+      session: studentsTable.session,
+      departmentId: studentsTable.departmentId,
+      departmentName: departmentsTable.name,
+      courseId: coursesTable.id,
+      courseCode: coursesTable.code,
+      courseTitle: coursesTable.title,
+      courseSemester: coursesTable.semester,
+      internalMarks: resultsTable.internalMarks,
+      midTerm: resultsTable.midTerm,
+      finalTerm: resultsTable.finalTerm,
+      practicalWork: resultsTable.practicalWork,
+      totalObtained: resultsTable.totalObtained,
+      percentage: resultsTable.percentage,
+      grade: resultsTable.grade,
+      gradePoint: resultsTable.gradePoint,
+      status: resultsTable.status,
+      isSupplementary: resultsTable.isSupplementary,
+    })
+    .from(resultsTable)
+    .innerJoin(studentsTable, eq(resultsTable.studentId, studentsTable.id))
+    .innerJoin(coursesTable, eq(resultsTable.courseId, coursesTable.id))
+    .innerJoin(departmentsTable, eq(coursesTable.departmentId, departmentsTable.id));
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  // Sorting
+  const sortColumn = 
+    sortBy === "name" ? studentsTable.name :
+    sortBy === "grade" ? resultsTable.gradePoint :
+    sortBy === "session" ? studentsTable.session :
+    studentsTable.rollNo;
+  
+  query = query.orderBy(sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn));
+
+  // Get total count for pagination
+  const countQuery = db.select({ count: resultsTable.id }).from(resultsTable)
+    .innerJoin(studentsTable, eq(resultsTable.studentId, studentsTable.id))
+    .innerJoin(coursesTable, eq(resultsTable.courseId, coursesTable.id))
+    .innerJoin(departmentsTable, eq(coursesTable.departmentId, departmentsTable.id));
+  
+  if (conditions.length > 0) {
+    // @ts-ignore - dynamic where clause
+    countQuery.where(and(...conditions));
+  }
+  
+  const countResult = await countQuery;
+  const total = countResult.length;
+
+  // Apply pagination
+  query = query.limit(limit).offset(offset);
+  const rows = await query;
+
+  res.json({
+    data: rows.map((r) => ({ ...r, cnic: decryptField(r.cnic) })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 });
 
 router.get("/results/student", async (req: Request, res: Response) => {

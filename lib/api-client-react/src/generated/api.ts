@@ -2323,3 +2323,121 @@ export function useGetSemesterStats<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+// Manual addition for Advanced Search endpoint
+export type GetResultsSearchParams = {
+  name?: string;
+  rollNo?: string;
+  cnic?: string;
+  session?: string;
+  departmentId?: string;
+  courseCode?: string;
+  gradeMin?: string;
+  gradeMax?: string;
+  status?: string;
+  sortBy?: "name" | "rollNo" | "grade" | "session";
+  sortOrder?: "asc" | "desc";
+  page?: string;
+  limit?: string;
+};
+
+export type GetResultsSearchResponse = {
+  data: Array<{
+    id: number;
+    studentId: number;
+    rollNo: string;
+    name: string;
+    fatherName: string;
+    cnic: string;
+    session: string;
+    departmentId: number;
+    departmentName: string;
+    courseId: number;
+    courseCode: string;
+    courseTitle: string;
+    courseSemester: string;
+    internalMarks: number;
+    midTerm: number;
+    finalTerm: number;
+    practicalWork: number;
+    totalObtained: number;
+    percentage: number;
+    grade: string;
+    gradePoint: number;
+    status: string;
+    isSupplementary: boolean;
+  }>;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
+export async function getResultsSearch(
+  params?: GetResultsSearchParams,
+  options?: { request?: RequestInit },
+): Promise<GetResultsSearchResponse> {
+  const queryString = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") {
+        queryString.append(key, value);
+      }
+    });
+  }
+  
+  const response = await customFetch(`/api/results/search?${queryString.toString()}`, {
+    ...options?.request,
+  });
+  
+  return response as unknown as GetResultsSearchResponse;
+}
+
+export const getGetResultsSearchQueryKey = (params?: GetResultsSearchParams) => {
+  return ['results-search', ...(params ? [params] : [])];
+};
+
+export const getGetResultsSearchQueryOptions = <
+  TData = GetResultsSearchResponse,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetResultsSearchParams,
+  options?: {
+    query?: UseQueryOptions<GetResultsSearchResponse, TError, TData>;
+    request?: RequestInit;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetResultsSearchQueryKey(params);
+
+  const queryFn: QueryFunction<GetResultsSearchResponse> = ({ signal }) =>
+    getResultsSearch(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    GetResultsSearchResponse,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useGetResultsSearch<
+  TData = GetResultsSearchResponse,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetResultsSearchParams,
+  options?: {
+    query?: UseQueryOptions<GetResultsSearchResponse, TError, TData>;
+    request?: RequestInit;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetResultsSearchQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
