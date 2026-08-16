@@ -61,14 +61,22 @@ export default function AdvancedSearch() {
     return () => clearTimeout(timer);
   }, [JSON.stringify(filters)]);
 
+  const searchParams = {
+    ...(debouncedFilters.name && { name: debouncedFilters.name }),
+    ...(debouncedFilters.rollNo && { rollNo: debouncedFilters.rollNo }),
+    ...(debouncedFilters.session && { session: debouncedFilters.session }),
+    ...(debouncedFilters.courseCode && { courseCode: debouncedFilters.courseCode }),
+    ...(debouncedFilters.status && { status: debouncedFilters.status }),
+    ...(debouncedFilters.gradeMin && { gradeMin: debouncedFilters.gradeMin }),
+    ...(debouncedFilters.gradeMax && { gradeMax: debouncedFilters.gradeMax }),
+    page: page.toString(),
+    limit: "20",
+    sortBy,
+    sortOrder,
+  };
+
   const { data, isLoading, error } = useGetResultsSearch({
-    query: {
-      ...debouncedFilters,
-      page: page.toString(),
-      limit: "20",
-      sortBy,
-      sortOrder,
-    },
+    query: searchParams,
   });
 
   const results = (data?.data ?? []) as SearchResult[];
