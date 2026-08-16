@@ -1,17 +1,21 @@
-# Dependencies
-node_modules/
-
+```
 # Build artifacts
 dist/
 build/
-*.js.map
-*.ts.map
-*.jsx.map
-*.tsx.map
+target/
 
-# Logs and temp files
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
+
+# Logs and temporary files
 *.log
 *.tmp
+*.swp
+*.swo
 
 # Environment variables
 .env
@@ -21,39 +25,30 @@ build/
 # Editors
 .vscode/
 .idea/
-
-# Python
-__pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/modules/
-.DS_Store
-Thumbs.db
-
-# Compiled and binary files
+*.class
 *.o
-*.obj
-*.out
 *.exe
 *.dll
 *.so
 *.a
-*.class
+*.obj
+*.out
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# System files
+.DS_Store
+Thumbs.db
+
+# MyPy cache
+.mypy_cache/
+
+# Pytest cache
+.pytest_cache/
 
 # Compressed files
 *.zip
@@ -78,364 +73,4 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# Coverage reports
-coverage/
-htmlcov/
-.coverage*
-
-# Testing
-.pytest_cache/
-.mypy_cache/
-.hypothesis/
-
-# Gradle
-.gradle/
-build/
-
-# Maven
-target/
-
-# Go
-*.out
-
-# Rust
-target/
-
-# Ruby
-*.gem
-.bundle
-
-# Node.js
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Bower
-bower_components/
-
-# Jspm
-jspm_packages/
-
-# Webpack
-webpack-stats.json
-
-# SASS
-.sass-cache/
-
-# Temporary folders
-tmp/
-temp/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# IDE specific
-*.swp
-*.swo
-*~
-
-# Database
-*.db
-*.db-journal
-
-# Backup files
-*.bak
-*.backup
-*~
-
-# Local configuration
-config/local.json
-settings/local.json
-
-# Secrets
-secrets/
-credentials.json
-
-# Docker
-.dockerenv
-
-# CI/CD
-.circleci/
-.github/
-.travis.yml
-jenkinsfile
-
-# Mobile
-*.ipa
-*.apk
-*.aab
-
-# Documentation
-docs/_build/
-docs/build/
-
-# C/C++
-*.i
-*.ii
-*.s
-*.mod
-*.ilk
-*.manifest
-*.res
-
-# Java
-*.jar
-*.war
-*.ear
-hs_err_pid*
-
-# .NET
-bin/
-obj/
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Android
-*.keystore
-local.properties
-captures/
-.externalNativeBuild
-
-# iOS
-*.mobileprovision
-*.xcuserstate
-xcuserdata/
-
-# Elixir
-.erlang.cookie
-.eunit
-.coverdata
-.coverdata.COVERAGE.20*
-
-# Haskell
-dist-newstyle/
-cabal.project.local
-cabal.project.local~
-.cabal-sandbox/
-*.prof
-*.vix
-
-# Julia
-.julia/
-
-# Zig
-zig-cache/
-zig-out/
-
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-
-# Ansible
-.retry
-
-# Vagrant
-.vagrant/
-
-# Puppet
-spec/fixtures/
-.manifest-tmp/
-
-# SaltStack
-salt://
-pillar://
-
-# Chef
-.chef/knife.rb
-chef-repo/
-.kitchen/
-
-# PowerShell
-ModuleBuilder/
-PSGet/
-
-# R
-.Rhistory
-.RData
-.Rproj.user/
-.Rprofile
-.Renviron
-
-# Scala
-lib_managed/
-src_managed/
-target/
-
-# Clojure
-target/
-*.class
-*.clj-eval-history
-.clj-kondo/
-
-# Erlang
-.eunit/
-ebin/
-erl_crash.dump
-
-# Perl
-blib/
-Makefile.old
-pm_to_blib/
-*.tar.gz
-.lwpcookies
-
-# PHP
-vendor/
-composer.lock
-
-# Ruby on Rails
-log/
-tmp/
-.ruby-version
-.bundle/
-vendor/bundle/
-
-# Django
-*.mo
-*.pot
-*.pyc
-*.pyo
-__pycache__/
-.pytest_cache/
-.coverage
-htmlcov/
-.coverage.*
-*.sqlite3
-media/
-staticfiles/
-celerybeat-schedule
-.DS_Store
-Thumbs.db
-
-# Flask
-instance/
-.webassets-cache
-*.swp
-*.swo
-*~
-
-# React
-build/
-public/dist/
-coverage/
-*.log
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Vue
-dist/
-.vuepress/dist
-.output
-.nuxt
-.gridsome/dist
-
-# Angular
-dist/
-.tmp
-.angular/cache/
-
-# Svelte
-.svelte-kit/
-.output
-
-# Next.js
-.next/
-out/
-export-marker.json
-
-# Nuxt.js
-.nuxt/
-dist/
-.output
-.static
-.nitro
-
-# Gatsby
-.public
-.cache/
-.dist/
-node_modules/.cache/gatsby
-
-# Remix
-public/build/
-.env.local
-.env.development.local
-.env.production.local
-
-# Expo
-.expo/
-web-build/
-node_modules/.cache/
-
-# Ionic
-resources-tv/
-resources-watch/
-node_modules/.bin/
-
-# Cordova
-platforms/
-plugins/
-merges/
-config.xml
-hooks/
-
-# Electron
-release/
-dist-electron/
-.electron/
-
-# PWA
-.swm
-
-# Static site generators
-.ssgbuild
-_dist/
-_site/
-.jekyll-cache/
-.jekyll-metadata
-.scully/
-_next/
-dist/
-output/
-public/.vitepress/cache
-.nuxt/
-.vuepress/dist
-.docusaurus
-.docusaurus-cache
-.gatsby
-.gatsby-cache
-gatsby/cache/
-gatsby/tmp/
-.next/static/chunks/pages/
-.next/static/development/dll/
-
-# Build tools
-.sconsign.dblite
-.scons_output.dblite
-.scons_cache.txt
-.scons_cache_timestamps.txt
-
-# Package managers
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-bun.lockb
-
-# Version control
-!.gitignore
-
-# Custom project-specific ignores
-artifacts/
+```
