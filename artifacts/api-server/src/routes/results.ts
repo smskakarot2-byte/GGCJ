@@ -178,10 +178,10 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  // Build the query - use a subquery to get distinct student-course combinations
-  // First, get distinct rollNo + courseCode combinations
+  // Build the query with proper DISTINCT to avoid duplicates
+  // Use a subquery approach to get unique student-course combinations
   const baseQuery = db
-    .select({
+    .selectDistinct({
       id: resultsTable.id,
       studentId: studentsTable.id,
       rollNo: studentsTable.rollNo,
@@ -228,11 +228,11 @@ router.get("/results/search", async (req: Request, res: Response) => {
   // Get all matching rows first
   const allRows = await baseQuery;
 
-  // Deduplicate by rollNo + courseId combination on the application side
+  // Deduplicate by studentId + courseId combination (in case of any remaining duplicates)
   const seen = new Set<string>();
   const uniqueRows: typeof allRows = [];
   for (const row of allRows) {
-    const key = `${row.rollNo}-${row.courseId}`;
+    const key = `${row.studentId}-${row.courseId}`;
     if (!seen.has(key)) {
       seen.add(key);
       uniqueRows.push(row);
