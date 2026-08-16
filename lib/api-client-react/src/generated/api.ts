@@ -2387,14 +2387,14 @@ export async function getResultsSearch(
       }
     });
   }
-  
+
   const response = await customFetch(`/api/results/search?${queryString.toString()}`, {
     ...options?.request,
+    credentials: "include",
   });
-  
+
   return response as unknown as GetResultsSearchResponse;
 }
-
 export const getGetResultsSearchQueryKey = (params?: GetResultsSearchParams) => {
   return ['results-search', ...(params ? [params] : [])];
 };
