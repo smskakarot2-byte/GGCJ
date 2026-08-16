@@ -164,12 +164,17 @@ export default function AdvancedSearch() {
               value={filters.name || filters.rollNo || ""}
               onChange={(e) => {
                 const value = e.target.value;
+                // Reset to empty object first to ensure clean state
+                if (!value.trim()) {
+                  setFilters({});
+                  setDebouncedFilters({});
+                  setPage(1);
+                  return;
+                }
                 if (/^\d+$/.test(value)) {
-                  updateFilter("rollNo", value);
-                  updateFilter("name", undefined);
+                  setFilters({ rollNo: value });
                 } else {
-                  updateFilter("name", value);
-                  updateFilter("rollNo", undefined);
+                  setFilters({ name: value });
                 }
               }}
               onKeyDown={(e) => {

@@ -4,8 +4,13 @@ dist/
 build/
 target/
 
-# Dependencies
-node_modules/
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
 venv/
 .venv/
 __pycache__/
@@ -14,6 +19,7 @@ __pycache__/
 # Logs and temporary files
 *.log
 *.tmp
+*.temp
 *.swp
 *.swo
 
@@ -40,7 +46,7 @@ coverage/
 htmlcov/
 .coverage
 
-# System files
+# OS generated files
 .DS_Store
 Thumbs.db
 
@@ -50,7 +56,7 @@ Thumbs.db
 # Pytest cache
 .pytest_cache/
 
-# Compressed files
+# Archives
 *.zip
 *.gz
 *.tar
@@ -73,3 +79,182 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+
+# Coverage reports
+coverage/
+htmlcov/
+
+# Gradle
+.gradle/
+build/
+
+# Maven
+target/
+
+# Rust
+target/
+Cargo.lock
+
+# Go
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.dylib
+*.test
+*.prof
+vendor/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.hprof
+hs_err_pid*
+
+# C/C++
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.ilk
+*.pdb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ruby
+*.gem
+*.rbc
+.bundle/
+.coverage/
+.rake_opts
+.rbx/
+.rspec
+Guardfile
+Vagrantfile
+*.rbc
+*.sassc
+.sass-cache/
+.rbenv-gemsets
+.rbenv-version
+.bundle/
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+jspm_packages/
+*.npm
+.npm
+.npmrc
+.cache/
+.nyc_output/
+.nyc_output/
+nyc.config.js
+istanbul.yml
+.coveralls.yml
+
+# Bower
+bower_components/
+
+# Composer
+vendor/
+composer.phar
+composer.lock
+
+# PHP
+*.php$
+.php_cs
+.php_cs.dist
+.php_cs.cache
+
+# .NET
+*.sln
+*.csproj
+*.vbproj
+*.user
+*.userosscache
+*.suo
+*.cache
+*.ncb
+*.obj
+*.log
+*.bak
+*.pid
+*.seed
+*.pid.lock
+*.rej
+*.orig
+*.min.js
+*.min.css
+bin/
+obj/
+TestResults/
+
+# Android
+*.apk
+*.ap_
+build/
+.externalNativeBuild
+.gradle
+local.properties
+
+# iOS
+*.ipa
+*.dSYM.zip
+*.dSYM/
+build/
+DerivedData/
+
+# Web
+*.css.map
+*.js.map
+*.tsbuildinfo
+.next/
+.nuxt/
+public/
+dist/
+build/
+
+# Julia
+.julia/
+*.ji
+*.jl.cov
+*.jl.mem
+*.so
+*.dylib
+*.dll
+
+# Zig
+zig-cache/
+*.zig-cache
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.ilk
+*.pdb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Generated files
+artifacts/
+```
