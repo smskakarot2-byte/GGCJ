@@ -156,36 +156,45 @@ export default function AdvancedSearch() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Input
-              id="search-input"
-              placeholder="Search by name or roll number..."
-              value={filters.name || filters.rollNo || ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d+$/.test(value)) {
-                  updateFilter("rollNo", value);
-                  updateFilter("name", undefined);
-                } else {
-                  updateFilter("name", value);
-                  updateFilter("rollNo", undefined);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setDebouncedFilters(filters);
-                  setPage(1);
-                }
-              }}
-              className="flex-1"
-            />
-            {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearAllFilters} className="shrink-0">
-                <X className="w-4 h-4 mr-1" />
-                Clear All
-              </Button>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label htmlFor="search-name" className="text-xs font-medium text-muted-foreground mb-1 block">Student Name</label>
+              <Input
+                id="search-name"
+                placeholder="Search by name..."
+                value={filters.name || ""}
+                onChange={(e) => updateFilter("name", e.target.value || undefined)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setDebouncedFilters(filters);
+                    setPage(1);
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label htmlFor="search-rollno" className="text-xs font-medium text-muted-foreground mb-1 block">Roll Number</label>
+              <Input
+                id="search-rollno"
+                placeholder="Search by roll number..."
+                value={filters.rollNo || ""}
+                onChange={(e) => updateFilter("rollNo", e.target.value || undefined)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setDebouncedFilters(filters);
+                    setPage(1);
+                  }
+                }}
+              />
+            </div>
           </div>
+
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="w-full mb-2">
+              <X className="w-4 h-4 mr-1" />
+              Clear All Filters
+            </Button>
+          )}
 
           {/* Expanded Filters */}
           {showFilters && (

@@ -178,10 +178,9 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  // Build the query with proper DISTINCT to avoid duplicates
-  // Use a subquery approach to get unique student-course combinations
+  // Build the query to get student-course combinations
   const baseQuery = db
-    .selectDistinct({
+    .select({
       id: resultsTable.id,
       studentId: studentsTable.id,
       rollNo: studentsTable.rollNo,
@@ -229,15 +228,15 @@ router.get("/results/search", async (req: Request, res: Response) => {
   const allRows = await baseQuery;
 
   // Deduplicate by studentId to show each student only once
-  // Keep the first occurrence (or highest grade if sorting by grade)
-  const seen = new Set<number>();
-  const uniqueRows: typeof allRows = [];
+  // Group by student and pick one record per student
+  const studentMap = new Map<number, typeof allRows[0]>();
   for (const row of allRows) {
-    if (!seen.has(row.studentId)) {
-      seen.add(row.studentId);
-      uniqueRows.push(row);
+    if (!studentMap.has(row.studentId)) {
+      studentMap.set(row.studentId, row);
     }
   }
+
+  const uniqueRows = Array.from(studentMap.values());
 
   const total = uniqueRows.length;
 
