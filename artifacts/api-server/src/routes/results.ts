@@ -228,11 +228,13 @@ router.get("/results/search", async (req: Request, res: Response) => {
   const allRows = await baseQuery;
 
   // Deduplicate by studentId to show each student only once
-  // Group by student and pick one record per student
-  const studentMap = new Map<number, typeof allRows[0]>();
+  // Keep the first occurrence (or highest grade if sorting by grade)
+  const seen = new Set<number>();
+  const uniqueRows: typeof allRows = [];
   for (const row of allRows) {
-    if (!studentMap.has(row.studentId)) {
-      studentMap.set(row.studentId, row);
+    if (!seen.has(row.studentId)) {
+      seen.add(row.studentId);
+      uniqueRows.push(row);
     }
   }
 
