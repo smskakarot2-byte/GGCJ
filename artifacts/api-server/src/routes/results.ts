@@ -227,13 +227,13 @@ router.get("/results/search", async (req: Request, res: Response) => {
   // Get all matching rows first
   const allRows = await baseQuery;
 
-  // Deduplicate by studentId + courseId combination to remove any duplicates
-  const seen = new Set<string>();
+  // Deduplicate by studentId to show each student only once
+  // Keep the first occurrence (or highest grade if sorting by grade)
+  const seen = new Set<number>();
   const uniqueRows: typeof allRows = [];
   for (const row of allRows) {
-    const key = `${row.studentId}-${row.courseId}`;
-    if (!seen.has(key)) {
-      seen.add(key);
+    if (!seen.has(row.studentId)) {
+      seen.add(row.studentId);
       uniqueRows.push(row);
     }
   }
