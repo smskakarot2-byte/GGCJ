@@ -238,8 +238,6 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  const uniqueRows = Array.from(studentMap.values());
-
   const total = uniqueRows.length;
 
   // Apply pagination manually
