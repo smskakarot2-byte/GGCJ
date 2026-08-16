@@ -134,9 +134,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div
         className={cn(
           "fixed inset-0 z-50 md:hidden transition-opacity duration-200",
-          isOpen ? "pointer-events-auto" : "pointer-events-none opacity-0"
+          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         )}
         aria-hidden={!isOpen}
+        inert={!isOpen}
       >
         {/* Backdrop */}
         <div
@@ -145,6 +146,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             isOpen ? "opacity-100" : "opacity-0"
           )}
           onClick={onClose}
+          aria-hidden="true"
         />
         {/* Drawer panel */}
         <aside
@@ -152,6 +154,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             "absolute inset-y-0 left-0 w-72 flex flex-col bg-sidebar border-r border-sidebar-border shadow-xl transition-transform duration-200",
             isOpen ? "translate-x-0" : "-translate-x-full"
           )}
+          aria-hidden={!isOpen}
         >
           {navContent}
         </aside>
