@@ -154,7 +154,7 @@ export default function StudentsPage() {
     const params = new URLSearchParams();
     if (selectedSession) params.set("session", selectedSession);
     if (departmentId) params.set("departmentId", String(departmentId));
-    window.open(`/api/results/transcript/${data.student.rollNo}?${params}`, "_blank");
+    window.location.href = `/api/results/transcript/${data.student.rollNo}?${params}`;
   }
 
   const grouped = data ? groupBySemester(data.results) : {};

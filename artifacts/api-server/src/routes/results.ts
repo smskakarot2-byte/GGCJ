@@ -178,8 +178,9 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  // Build the query
-  let query = db
+  // Build the query - use a subquery to get distinct student-course combinations
+  // First, get distinct rollNo + courseCode combinations
+  const baseQuery = db
     .select({
       id: resultsTable.id,
       studentId: studentsTable.id,
@@ -211,7 +212,8 @@ router.get("/results/search", async (req: Request, res: Response) => {
     .innerJoin(departmentsTable, eq(coursesTable.departmentId, departmentsTable.id));
 
   if (conditions.length > 0) {
-    query = query.where(and(...conditions));
+    // @ts-ignore - dynamic where clause  
+    baseQuery.where(and(...conditions));
   }
 
   // Sorting
@@ -221,25 +223,26 @@ router.get("/results/search", async (req: Request, res: Response) => {
     sortBy === "session" ? studentsTable.session :
     studentsTable.rollNo;
   
-  query = query.orderBy(sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn));
+  baseQuery.orderBy(sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn));
 
-  // Get total count for pagination
-  const countQuery = db.select({ count: resultsTable.id }).from(resultsTable)
-    .innerJoin(studentsTable, eq(resultsTable.studentId, studentsTable.id))
-    .innerJoin(coursesTable, eq(resultsTable.courseId, coursesTable.id))
-    .innerJoin(departmentsTable, eq(coursesTable.departmentId, departmentsTable.id));
-  
-  if (conditions.length > 0) {
-    // @ts-ignore - dynamic where clause
-    countQuery.where(and(...conditions));
+  // Get all matching rows first
+  const allRows = await baseQuery;
+
+  // Deduplicate by rollNo + courseId combination on the application side
+  const seen = new Set<string>();
+  const uniqueRows: typeof allRows = [];
+  for (const row of allRows) {
+    const key = `${row.rollNo}-${row.courseId}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueRows.push(row);
+    }
   }
-  
-  const countResult = await countQuery;
-  const total = countResult.length;
 
-  // Apply pagination
-  query = query.limit(limit).offset(offset);
-  const rows = await query;
+  const total = uniqueRows.length;
+
+  // Apply pagination manually
+  const rows = uniqueRows.slice(offset, offset + limit);
 
   res.json({
     data: rows.map((r) => ({ ...r, cnic: decryptField(r.cnic) })),
