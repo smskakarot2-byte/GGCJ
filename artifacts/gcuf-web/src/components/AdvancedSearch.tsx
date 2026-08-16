@@ -187,6 +187,13 @@ export default function AdvancedSearch() {
             )}
           </div>
 
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="w-full mb-2">
+              <X className="w-4 h-4 mr-1" />
+              Clear All Filters
+            </Button>
+          )}
+
           {/* Expanded Filters */}
           {showFilters && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t">

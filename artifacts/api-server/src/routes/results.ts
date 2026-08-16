@@ -178,10 +178,9 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  // Build the query with proper DISTINCT to avoid duplicates
-  // Use a subquery approach to get unique student-course combinations
+  // Build the query to get student-course combinations
   const baseQuery = db
-    .selectDistinct({
+    .select({
       id: resultsTable.id,
       studentId: studentsTable.id,
       rollNo: studentsTable.rollNo,
@@ -238,6 +237,8 @@ router.get("/results/search", async (req: Request, res: Response) => {
       uniqueRows.push(row);
     }
   }
+
+  const uniqueRows = Array.from(studentMap.values());
 
   const total = uniqueRows.length;
 
