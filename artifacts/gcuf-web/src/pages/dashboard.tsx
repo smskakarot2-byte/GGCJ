@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/use-auth";
+import AdvancedSearch from "@/components/AdvancedSearch";
 
 const PALETTE = ["#4f8ef7", "#34d399", "#fbbf24", "#a78bfa", "#f87171", "#38bdf8"];
 
@@ -182,6 +183,9 @@ export default function DashboardPage() {
         <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground">System-wide overview — click any card to navigate</p>
       </div>
+
+      {/* Advanced Search Component */}
+      <AdvancedSearch />
 
       {/* Overview stat cards */}
       {isLoading ? (
