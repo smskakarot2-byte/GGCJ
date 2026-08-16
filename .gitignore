@@ -36,6 +36,11 @@ zig-out/
 .idea/
 *.swp
 *.swo
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
 
 # System files
 .DS_Store
