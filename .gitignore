@@ -20,9 +20,11 @@ target/
 .idea/
 *.swp
 *.swo
-
-# Logs
+*.tmp
 *.log
+*.env
+*.env.local
+*.env.*
 
 # Python
 __pycache__/
