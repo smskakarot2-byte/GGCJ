@@ -111,7 +111,23 @@ export default function StudentsPage() {
 
   useEffect(() => {
     fetch("/api/departments", { credentials: "include" }).then((r) => r.json()).then(setDepartments).catch(() => {});
-    fetch("/api/results/sessions", { credentials: "include" }).then((r) => r.json()).then(setSessions).catch(() => {});
+    fetch("/api/results/sessions", { credentials: "include" })
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to fetch sessions");
+        return r.json();
+      })
+      .then((data) => {
+        // Ensure data is an array before setting
+        if (Array.isArray(data)) {
+          setSessions(data);
+        } else {
+          setSessions([]);
+        }
+      })
+      .catch(() => {
+        // Silently fail - sessions dropdown will be empty but app won't crash
+        setSessions([]);
+      });
   }, []);
 
   async function handleLookup() {

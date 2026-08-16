@@ -70,6 +70,51 @@ async function ensureSchema(): Promise<void> {
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
   );
+
+  CREATE TABLE IF NOT EXISTS courses (
+    id serial PRIMARY KEY,
+    code text NOT NULL,
+    title text NOT NULL,
+    credit_hours_raw text NOT NULL DEFAULT '3(2-1)',
+    credit_hours real NOT NULL DEFAULT 3,
+    session text NOT NULL DEFAULT '',
+    semester text NOT NULL DEFAULT '',
+    department_id integer NOT NULL REFERENCES departments(id) ON DELETE cascade,
+    max_marks real NOT NULL DEFAULT 60,
+    is_core boolean NOT NULL DEFAULT true,
+    uploaded_by integer REFERENCES system_users(id),
+    created_at timestamptz NOT NULL DEFAULT now()
+  );
+
+  CREATE TABLE IF NOT EXISTS students (
+    id serial PRIMARY KEY,
+    roll_no text NOT NULL,
+    name text NOT NULL,
+    father_name text NOT NULL DEFAULT '',
+    cnic text NOT NULL DEFAULT '',
+    session text NOT NULL DEFAULT '',
+    department_id integer REFERENCES departments(id) ON DELETE SET NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT students_roll_session_dept UNIQUE (roll_no, session, department_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS results (
+    id serial PRIMARY KEY,
+    student_id integer NOT NULL REFERENCES students(id) ON DELETE cascade,
+    course_id integer NOT NULL REFERENCES courses(id) ON DELETE cascade,
+    internal_marks real NOT NULL DEFAULT 0,
+    mid_term real NOT NULL DEFAULT 0,
+    final_term real NOT NULL DEFAULT 0,
+    practical_work real NOT NULL DEFAULT 0,
+    total_obtained real NOT NULL DEFAULT 0,
+    percentage real NOT NULL DEFAULT 0,
+    grade text NOT NULL DEFAULT '',
+    grade_point real NOT NULL DEFAULT 0,
+    status text NOT NULL DEFAULT 'Pass',
+    is_supplementary boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT results_student_course UNIQUE (student_id, course_id)
+  );
   `;
 
   try {
