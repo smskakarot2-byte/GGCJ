@@ -51,14 +51,14 @@ export default function AdvancedSearch() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showFilters, setShowFilters] = useState(false);
 
-  // Debounce filter changes
+  // Debounce filter changes - only trigger on actual value changes, not on every keystroke during typing
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedFilters(filters);
+      setDebouncedFilters({ ...filters });
       setPage(1); // Reset to first page on filter change
-    }, 500);
+    }, 800);
     return () => clearTimeout(timer);
-  }, [filters]);
+  }, [JSON.stringify(filters)]);
 
   const { data, isLoading, error } = useGetResultsSearch({
     query: {
@@ -168,6 +168,12 @@ export default function AdvancedSearch() {
                 } else {
                   updateFilter("name", value);
                   updateFilter("rollNo", undefined);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setDebouncedFilters(filters);
+                  setPage(1);
                 }
               }}
               className="flex-1"
