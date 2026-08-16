@@ -19,6 +19,11 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs and temp files
 *.log
