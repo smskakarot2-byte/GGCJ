@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import AdvancedSearch from "@/components/AdvancedSearch";
 
 interface StudentResult {
   id: number;
@@ -164,6 +165,9 @@ export default function StudentsPage() {
         <h1 className="text-xl font-bold text-foreground">Student Lookup</h1>
         <p className="text-sm text-muted-foreground">Search by roll number — results grouped by session &amp; semester</p>
       </div>
+
+      {/* Advanced Search Component */}
+      <AdvancedSearch />
 
       {/* Search */}
       <Card className="bg-card border-card-border">

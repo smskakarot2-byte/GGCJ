@@ -360,6 +360,7 @@ router.get("/results/student", async (req: Request, res: Response) => {
 });
 
 router.get("/results/transcript/:rollNo", async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const rollNo = req.params.rollNo as string;
   const session = req.query.session as string | undefined;
   const deptIdParam = req.query.departmentId as string | undefined;
