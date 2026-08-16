@@ -91,7 +91,7 @@ const FAQ = [
   },
   {
     q: "Who can I contact for support?",
-    a: "For technical issues, contact the Department of Computer Science. For result-related queries, contact the Examination Branch directly.",
+    a: "For any issues related to this website, please contact Syed Faseeh Haider directly at smskakarot@gmail.com or call 0309-7519817.",
   },
 ];
 
