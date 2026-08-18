@@ -124,7 +124,7 @@ router.get("/results/search", async (req: Request, res: Response) => {
   const limit = Math.min(parseInt(limitStr), 100); // Max 100 per page
   const offset = (page - 1) * limit;
 
-  // Build WHERE conditions
+  // Build WHERE conditions - must be done after baseQuery is defined since we reference its tables
   const conditions: SQL[] = [];
 
   // Professor restriction: can only see their own department
@@ -136,7 +136,39 @@ router.get("/results/search", async (req: Request, res: Response) => {
     conditions.push(eq(studentsTable.departmentId, user.departmentId));
   }
 
-  // Apply filters
+  // Build the base query first
+  const baseQuery = db
+    .select({
+      id: resultsTable.id,
+      studentId: studentsTable.id,
+      rollNo: studentsTable.rollNo,
+      name: studentsTable.name,
+      fatherName: studentsTable.fatherName,
+      cnic: studentsTable.cnic,
+      session: studentsTable.session,
+      departmentId: studentsTable.departmentId,
+      departmentName: departmentsTable.name,
+      courseId: coursesTable.id,
+      courseCode: coursesTable.code,
+      courseTitle: coursesTable.title,
+      courseSemester: coursesTable.semester,
+      internalMarks: resultsTable.internalMarks,
+      midTerm: resultsTable.midTerm,
+      finalTerm: resultsTable.finalTerm,
+      practicalWork: resultsTable.practicalWork,
+      totalObtained: resultsTable.totalObtained,
+      percentage: resultsTable.percentage,
+      grade: resultsTable.grade,
+      gradePoint: resultsTable.gradePoint,
+      status: resultsTable.status,
+      isSupplementary: resultsTable.isSupplementary,
+    })
+    .from(resultsTable)
+    .innerJoin(studentsTable, eq(resultsTable.studentId, studentsTable.id))
+    .innerJoin(coursesTable, eq(resultsTable.courseId, coursesTable.id))
+    .innerJoin(departmentsTable, eq(coursesTable.departmentId, departmentsTable.id));
+
+  // Apply filters after baseQuery is defined
   if (name && name.trim()) {
     conditions.push(like(studentsTable.name, `%${name.trim()}%`));
   }
@@ -178,40 +210,7 @@ router.get("/results/search", async (req: Request, res: Response) => {
     }
   }
 
-  // Build the query to get student-course combinations
-  const baseQuery = db
-    .select({
-      id: resultsTable.id,
-      studentId: studentsTable.id,
-      rollNo: studentsTable.rollNo,
-      name: studentsTable.name,
-      fatherName: studentsTable.fatherName,
-      cnic: studentsTable.cnic,
-      session: studentsTable.session,
-      departmentId: studentsTable.departmentId,
-      departmentName: departmentsTable.name,
-      courseId: coursesTable.id,
-      courseCode: coursesTable.code,
-      courseTitle: coursesTable.title,
-      courseSemester: coursesTable.semester,
-      internalMarks: resultsTable.internalMarks,
-      midTerm: resultsTable.midTerm,
-      finalTerm: resultsTable.finalTerm,
-      practicalWork: resultsTable.practicalWork,
-      totalObtained: resultsTable.totalObtained,
-      percentage: resultsTable.percentage,
-      grade: resultsTable.grade,
-      gradePoint: resultsTable.gradePoint,
-      status: resultsTable.status,
-      isSupplementary: resultsTable.isSupplementary,
-    })
-    .from(resultsTable)
-    .innerJoin(studentsTable, eq(resultsTable.studentId, studentsTable.id))
-    .innerJoin(coursesTable, eq(resultsTable.courseId, coursesTable.id))
-    .innerJoin(departmentsTable, eq(coursesTable.departmentId, departmentsTable.id));
-
   if (conditions.length > 0) {
-    // @ts-ignore - dynamic where clause  
     baseQuery.where(and(...conditions));
   }
 
