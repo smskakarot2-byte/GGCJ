@@ -75,9 +75,7 @@ export default function AdvancedSearch() {
     sortOrder,
   };
 
-  const { data, isLoading, error } = useGetResultsSearch({
-    query: searchParams,
-  });
+  const { data, isLoading, error } = useGetResultsSearch(searchParams);
 
   const results = (data?.data ?? []) as SearchResult[];
   const pagination = data?.pagination as PaginationInfo | undefined;
