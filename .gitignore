@@ -1,8 +1,4 @@
-# Dependencies
-node_modules/
-.julia/
-.zig-cache/
-zig-cache/
+```ts
 
 # Logs and temp files
 *.log
