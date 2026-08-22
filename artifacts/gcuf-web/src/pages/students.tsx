@@ -156,28 +156,13 @@ export default function StudentsPage() {
     if (departmentId) params.set("departmentId", String(departmentId));
     
     // Use fetch with credentials to ensure cookies are sent, then trigger download
-    console.log("Downloading transcript for rollNo:", data.student.rollNo);
     fetch(`/api/results/transcript/${data.student.rollNo}?${params}`, { 
-      credentials: "include",
-      headers: {
-        "Accept": "text/html,application/json"
-      }
+      credentials: "include" 
     })
       .then(async (res) => {
-        console.log("Transcript response status:", res.status);
         if (!res.ok) {
           const error = await res.text().catch(() => "Unknown error");
-          console.error("Transcript download failed:", res.status, error);
-          if (res.status === 401) {
-            toast({
-              title: "Session Expired",
-              description: "Please log in again to download transcripts.",
-              variant: "destructive",
-            });
-          } else {
-            throw new Error(`Download failed: ${res.status} ${error}`);
-          }
-          return;
+          throw new Error(`Download failed: ${res.status} ${error}`);
         }
         // The transcript endpoint returns HTML, so we need to open it in a new window
         // or download it as a blob
