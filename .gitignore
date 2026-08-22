@@ -1,16 +1,4 @@
-```gitignore
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-dist/
-build/
-target/
-
 # Dependencies
-.venv/
-venv/
 node_modules/
 .julia/
 .zig-cache/
@@ -43,11 +31,12 @@ coverage/
 htmlcov/
 .coverage
 
-# Python specific
-*.pyc
+# Python
 __pycache__/
+*.pyc
 *.pyo
 *.pyd
+*.py.class
 .Python
 *.so
 *.egg-info/
@@ -72,6 +61,13 @@ coverage/
 target/
 .gradle/
 build/
+node_modules/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
 
 # Go
 *.exe
