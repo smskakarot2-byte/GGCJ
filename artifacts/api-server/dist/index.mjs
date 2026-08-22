@@ -78545,10 +78545,12 @@ var loginSchema = external_exports.object({
   password: external_exports.string().min(1)
 });
 function setSessionCookie(res, sid) {
+  const isDev2 = process.env.NODE_ENV !== "production";
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: !isDev2,
+    // Only use secure cookies in production (HTTPS)
+    sameSite: isDev2 ? "lax" : "strict",
     path: "/",
     maxAge: SESSION_TTL
   });
