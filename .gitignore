@@ -1,10 +1,35 @@
 # Dependencies
 node_modules/
+.julia/
+.zig-cache/
+zig-cache/
 
-# Build artifacts
-dist/
-build/
-target/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+*.out
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
 
 # Python
 __pycache__/
@@ -13,79 +38,28 @@ __pycache__/
 *.pyd
 *.py.class
 .Python
-env/
-venv/
-.venv/
-.venv.bak/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/modules/
-.DS_Store
-.hg
-.svn
-.wafpickle-*
-coverage/
-htmlcov/
-.pytest_cache/
-.mypy_cache/
+*.so
+*.egg-info/
 .eggs/
-eggs/
-parts/
-var/
-sdist/
-develop-eggs/
-.installed.cfg
-lib/
-lib64/
-.ipython/
-.pyre/
-.pytype/
-cython_debug/
 
-# Node.js
+# JavaScript/Node specific
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 node_modules/
-jspm_packages/
-typings/
-.nyc_output
+dist/
+build/
 .nyc_output/
 coverage/
-lib-cov
-*.seed
-*.pid
-*.gz
-*.mtx
-*.lock
-npm-shrinkwrap.json
-.npm
-.npmrc
-.eslintcache
-.auto-changelog-cache
-.dependency-cruiser-results.json
-.nyc_output
-.repl_history
-.vscode
-.idea
-.DS_Store
-Thumbs.db
 
-# TypeScript
-*.tsbuildinfo
-*.js.map
-*.ts.map
-*.tsx.map
-*.jsx.map
-dist/
+# Java/Maven/Gradle
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+target/
+.gradle/
 build/
 node_modules/
 .env
@@ -95,14 +69,81 @@ node_modules/
 .env.production.local
 .env.*
 
-# Editor
-.vscode/
-.idea/
+# Go
+*.exe
+*.dll
+*.so
+*.dylib
+
+# C/C++
+*.o
+*.a
+*.obj
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Archives
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+
+# MyPy cache
+.mypy_cache/
+# PyTest cache
+.pytest_cache/
+
+# Julia
+.julia/
+*.ji
+
+# Zig
+zig-cache/
+.zig-cache/
+
+# Generated documentation
+docs/_build/
+doc/_build/
+
+# IDE specific
+.vs/
 *.swp
 *.swo
-*.tmp
-*.log
-
-# OS
+*~
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Icon?
+.directory
+.Spotlight-V100
+.Trashes
+._*
+.metadata
+```
+
+Wait, let me reconsider. The only modified file is 'artifacts/api-server/src/routes/results.ts' which is a TypeScript source file. There are no build artifacts, dependencies, or temporary files in the change list. Following rule #6, since the changes contain only source files and no build artifacts, dependencies, or temp files, the output should be empty.
+
+```gitignore
+
+```

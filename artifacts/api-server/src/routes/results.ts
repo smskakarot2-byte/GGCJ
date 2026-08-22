@@ -372,12 +372,15 @@ router.get("/results/transcript/:rollNo", async (req: Request, res: Response) =>
   const isAuthenticated = req.isAuthenticated();
   const user = req.user as { id: number; role: string; departmentId?: number } | undefined;
 
-  // If not authenticated, allow access since students already verified ownership via rollNo lookup
-  // This allows students to view/download their transcript on the landing page without logging in
-  // Students have already proven they know their roll number and session via the lookup
+  // If not authenticated, only allow access if requesting own transcript (no departmentId in query)
+  // This allows students to view their transcript on the landing page without logging into admin panel
   if (!isAuthenticated) {
-    // No restriction - unauthenticated users can access any transcript they have the rollNo for
-    // This is safe because rollNo+session acts as a shared secret
+    // Unauthenticated users can only access transcripts without departmentId filter
+    // This is for the public student result page
+    if (departmentId) {
+      res.status(403).json({ error: "Authentication required to download transcripts with department filter" });
+      return;
+    }
   } else {
     // Authenticated users (admin/professor) can only access transcripts for their authorized departments
     if (user?.role === "professor" && user?.departmentId && departmentId !== user.departmentId) {
