@@ -361,11 +361,33 @@ router.get("/results/student", async (req: Request, res: Response) => {
 });
 
 router.get("/results/transcript/:rollNo", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  // Allow unauthenticated access for students viewing their own transcript via the public landing page
+  // But require authentication for admins/professors downloading transcripts from the admin panel
   const rollNo = req.params.rollNo as string;
   const session = req.query.session as string | undefined;
   const deptIdParam = req.query.departmentId as string | undefined;
   const departmentId = deptIdParam ? parseInt(deptIdParam) : undefined;
+
+  // Check if user is authenticated
+  const isAuthenticated = req.isAuthenticated();
+  const user = req.user as { id: number; role: string; departmentId?: number } | undefined;
+
+  // If not authenticated, only allow access if requesting own transcript (no departmentId in query)
+  // This allows students to view their transcript on the landing page without logging into admin panel
+  if (!isAuthenticated) {
+    // Unauthenticated users can only access transcripts without departmentId filter
+    // This is for the public student result page
+    if (departmentId) {
+      res.status(403).json({ error: "Authentication required to download transcripts with department filter" });
+      return;
+    }
+  } else {
+    // Authenticated users (admin/professor) can only access transcripts for their authorized departments
+    if (user?.role === "professor" && user?.departmentId && departmentId !== user.departmentId) {
+      res.status(403).json({ error: "Forbidden: Can only access transcripts for your own department" });
+      return;
+    }
+  }
 
   const conditions: ReturnType<typeof eq>[] = [eq(studentsTable.rollNo, rollNo)];
   if (session) conditions.push(eq(studentsTable.session, session));
