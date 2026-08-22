@@ -18,7 +18,24 @@ const app: Express = express();
 // ── Security headers ──────────────────────────────────────────────────────────
 // crossOriginEmbedderPolicy disabled so the transcript HTML page can load
 // external fonts and be opened as a standalone tab without COOP/COEP errors.
-app.use(helmet({ crossOriginEmbedderPolicy: false }));
+// contentSecurityPolicy configured to allow inline scripts for transcript generation
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcAttr: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      fontSrc: ["'self'", "https:", "data:"],
+      connectSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  },
+}));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Set ALLOWED_ORIGINS to a comma-separated list of trusted origins in production.

@@ -163,7 +163,73 @@ export default function LandingPage({ onStaffLogin }: LandingPageProps) {
     const params = new URLSearchParams();
     if (selectedSession) params.set("session", selectedSession);
     if (departmentId) params.set("departmentId", String(departmentId));
-    window.open(`/api/results/transcript/${data.student.rollNo}?${params}`, "_blank");
+    
+    // Use fetch with credentials to ensure cookies are sent, then trigger download
+    console.log("Downloading transcript for rollNo:", data.student.rollNo);
+    fetch(`/api/results/transcript/${data.student.rollNo}?${params}`, { 
+      credentials: "include",
+      headers: {
+        "Accept": "text/html,application/json"
+      }
+    })
+      .then(async (res) => {
+        console.log("Transcript response status:", res.status);
+        if (!res.ok) {
+          const error = await res.text().catch(() => "Unknown error");
+          console.error("Transcript download failed:", res.status, error);
+          if (res.status === 401) {
+            toast({
+              title: "Session Expired",
+              description: "Please log in again to download transcripts.",
+              variant: "destructive",
+            });
+          } else if (res.status === 403) {
+            toast({
+              title: "Access Denied",
+              description: "You must be logged in as a student or admin to download transcripts.",
+              variant: "destructive",
+            });
+          } else {
+            throw new Error(`Download failed: ${res.status} ${error}`);
+          }
+          return;
+        }
+        // The transcript endpoint returns HTML, so we need to open it in a new window
+        // or download it as a blob
+        const contentType = res.headers.get("Content-Type");
+        if (contentType?.includes("text/html")) {
+          // For HTML transcripts, open in new window
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const newWindow = window.open(url, "_blank");
+          if (!newWindow) {
+            toast({
+              title: "Popup Blocked",
+              description: "Please allow popups to view the transcript.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          // For PDF or other formats, trigger download
+          const blob = await res.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = `transcript-${data.student.rollNo}.html`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(blobUrl);
+        }
+      })
+      .catch((err) => {
+        console.error("Transcript download error:", err);
+        toast({
+          title: "Download Failed",
+          description: "Failed to download transcript. Please ensure you are logged in.",
+          variant: "destructive",
+        });
+      });
   }
 
   const grouped = data ? groupBySemester(data.results) : {};
