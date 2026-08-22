@@ -153,16 +153,21 @@ export default function StudentsPage() {
     if (!data) return;
     const params = new URLSearchParams();
     if (selectedSession) params.set("session", selectedSession);
-    // Don't send departmentId for student downloads - let the backend find the student by rollNo+session only
-    // This avoids 403 errors when students try to download their own transcripts
+    // IMPORTANT: Do NOT send departmentId for student downloads
+    // The backend will find the student by rollNo+session only
+    // Sending departmentId causes 403 errors for unauthenticated users
     
-    // Use fetch with credentials to ensure cookies are sent, then trigger download
+    console.log("Downloading transcript for rollNo:", data.student.rollNo, "with params:", params.toString());
+    
+    // Use fetch with credentials to ensure cookies are sent if available, then trigger download
     fetch(`/api/results/transcript/${data.student.rollNo}?${params}`, { 
       credentials: "include" 
     })
       .then(async (res) => {
+        console.log("Transcript response status:", res.status);
         if (!res.ok) {
           const error = await res.text().catch(() => "Unknown error");
+          console.error("Transcript download failed:", res.status, error);
           throw new Error(`Download failed: ${res.status} ${error}`);
         }
         // The transcript endpoint returns HTML, so we need to open it in a new window
@@ -197,7 +202,7 @@ export default function StudentsPage() {
         console.error("Transcript download error:", err);
         toast({
           title: "Download Failed",
-          description: "Failed to download transcript. Please ensure you are logged in.",
+          description: err instanceof Error ? err.message : "Failed to download transcript.",
           variant: "destructive",
         });
       });

@@ -372,12 +372,14 @@ router.get("/results/transcript/:rollNo", async (req: Request, res: Response) =>
   const isAuthenticated = req.isAuthenticated();
   const user = req.user as { id: number; role: string; departmentId?: number } | undefined;
 
-  // If not authenticated, allow access since students already verified ownership via rollNo lookup
-  // This allows students to view/download their transcript on the landing page without logging in
-  // Students have already proven they know their roll number and session via the lookup
+  // IMPORTANT: When departmentId is provided but user is NOT authenticated,
+  // we should IGNORE the departmentId filter and just use rollNo+session.
+  // This prevents 403 errors when students access transcripts from the student lookup page.
+  // The frontend should NOT send departmentId for student downloads, but we handle it gracefully here too.
   if (!isAuthenticated) {
-    // No restriction - unauthenticated users can access any transcript they have the rollNo for
-    // This is safe because rollNo+session acts as a shared secret
+    // Unauthenticated users (students) can access any transcript with valid rollNo+session
+    // Ignore any departmentId parameter they might have sent
+    console.log(`[Transcript] Unauthenticated request for rollNo=${rollNo}, session=${session || 'any'}. Ignoring departmentId filter.`);
   } else {
     // Authenticated users (admin/professor) can only access transcripts for their authorized departments
     if (user?.role === "professor" && user?.departmentId && departmentId !== user.departmentId) {
@@ -388,8 +390,12 @@ router.get("/results/transcript/:rollNo", async (req: Request, res: Response) =>
 
   const conditions: ReturnType<typeof eq>[] = [eq(studentsTable.rollNo, rollNo)];
   if (session) conditions.push(eq(studentsTable.session, session));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (departmentId && !isNaN(departmentId)) conditions.push(eq(studentsTable.departmentId, departmentId as any));
+  // Only apply departmentId filter if user is authenticated AND has a valid departmentId
+  // For unauthenticated requests, we skip the departmentId filter entirely
+  if (isAuthenticated && departmentId && !isNaN(departmentId)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    conditions.push(eq(studentsTable.departmentId, departmentId as any));
+  }
 
   const studentRows = await db.select().from(studentsTable).where(and(...conditions)).limit(1);
   if (!studentRows.length) { res.status(404).json({ error: "Student not found" }); return; }
