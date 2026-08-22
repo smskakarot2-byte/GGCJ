@@ -154,7 +154,52 @@ export default function StudentsPage() {
     const params = new URLSearchParams();
     if (selectedSession) params.set("session", selectedSession);
     if (departmentId) params.set("departmentId", String(departmentId));
-    window.location.href = `/api/results/transcript/${data.student.rollNo}?${params}`;
+    
+    // Use fetch with credentials to ensure cookies are sent, then trigger download
+    fetch(`/api/results/transcript/${data.student.rollNo}?${params}`, { 
+      credentials: "include" 
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const error = await res.text().catch(() => "Unknown error");
+          throw new Error(`Download failed: ${res.status} ${error}`);
+        }
+        // The transcript endpoint returns HTML, so we need to open it in a new window
+        // or download it as a blob
+        const contentType = res.headers.get("Content-Type");
+        if (contentType?.includes("text/html")) {
+          // For HTML transcripts, open in new window
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const newWindow = window.open(url, "_blank");
+          if (!newWindow) {
+            toast({
+              title: "Popup Blocked",
+              description: "Please allow popups to view the transcript.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          // For PDF or other formats, trigger download
+          const blob = await res.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = `transcript-${data.student.rollNo}.html`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(blobUrl);
+        }
+      })
+      .catch((err) => {
+        console.error("Transcript download error:", err);
+        toast({
+          title: "Download Failed",
+          description: "Failed to download transcript. Please ensure you are logged in.",
+          variant: "destructive",
+        });
+      });
   }
 
   const grouped = data ? groupBySemester(data.results) : {};

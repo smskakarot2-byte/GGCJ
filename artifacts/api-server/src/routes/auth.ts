@@ -63,10 +63,11 @@ const loginSchema = z.object({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function setSessionCookie(res: Response, sid: string) {
+  const isDev = process.env.NODE_ENV !== "production";
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: !isDev, // Only use secure cookies in production (HTTPS)
+    sameSite: isDev ? "lax" : "strict",
     path: "/",
     maxAge: SESSION_TTL,
   });
