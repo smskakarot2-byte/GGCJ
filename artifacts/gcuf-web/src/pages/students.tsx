@@ -153,7 +153,8 @@ export default function StudentsPage() {
     if (!data) return;
     const params = new URLSearchParams();
     if (selectedSession) params.set("session", selectedSession);
-    if (departmentId) params.set("departmentId", String(departmentId));
+    // Don't send departmentId for student downloads - let the backend find the student by rollNo+session only
+    // This avoids 403 errors when students try to download their own transcripts
     
     // Use fetch with credentials to ensure cookies are sent, then trigger download
     fetch(`/api/results/transcript/${data.student.rollNo}?${params}`, { 
