@@ -153,8 +153,9 @@ export default function StudentsPage() {
     if (!data) return;
     const params = new URLSearchParams();
     if (selectedSession) params.set("session", selectedSession);
-    // Don't send departmentId for student downloads - let the backend find the student by rollNo+session only
-    // This avoids 403 errors when students try to download their own transcripts
+    // IMPORTANT: Do NOT send departmentId for student downloads
+    // The backend will find the student by rollNo+session only
+    // Sending departmentId causes 403 errors for unauthenticated users
     
     console.log("Downloading transcript for rollNo:", data.student.rollNo, "with params:", params.toString());
     
