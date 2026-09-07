@@ -331,7 +331,7 @@ export default function AdvancedSearch() {
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground">CNIC</th>
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden md:table-cell">Father Name</th>
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden lg:table-cell">Department</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden xl:table-cell">Session</th>
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Session</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -344,7 +344,7 @@ export default function AdvancedSearch() {
                         <td className="py-2 px-3 text-xs">{result.cnic || "N/A"}</td>
                         <td className="py-2 px-3 hidden md:table-cell text-xs">{result.fatherName}</td>
                         <td className="py-2 px-3 hidden lg:table-cell text-xs">{result.departmentName}</td>
-                        <td className="py-2 px-3 hidden xl:table-cell text-xs">{result.session}</td>
+                        <td className="py-2 px-3 text-xs">{result.session}</td>
                       </tr>
                     ))}
                   </tbody>
