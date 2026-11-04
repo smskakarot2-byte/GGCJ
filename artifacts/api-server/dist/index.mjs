@@ -79974,17 +79974,25 @@ router6.get("/results/student", async (req, res) => {
   });
 });
 router6.get("/results/transcript/:rollNo", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
   const rollNo = req.params.rollNo;
   const session = req.query.session;
   const deptIdParam = req.query.departmentId;
   const departmentId = deptIdParam ? parseInt(deptIdParam) : void 0;
+  const isAuthenticated = req.isAuthenticated();
+  const user = req.user;
+  if (!isAuthenticated) {
+    console.log(`[Transcript] Unauthenticated request for rollNo=${rollNo}, session=${session || "any"}. Ignoring departmentId filter.`);
+  } else {
+    if (user?.role === "professor" && user?.departmentId && departmentId !== user.departmentId) {
+      res.status(403).json({ error: "Forbidden: Can only access transcripts for your own department" });
+      return;
+    }
+  }
   const conditions = [eq(studentsTable.rollNo, rollNo)];
   if (session) conditions.push(eq(studentsTable.session, session));
-  if (departmentId && !isNaN(departmentId)) conditions.push(eq(studentsTable.departmentId, departmentId));
+  if (isAuthenticated && departmentId && !isNaN(departmentId)) {
+    conditions.push(eq(studentsTable.departmentId, departmentId));
+  }
   const studentRows = await db.select().from(studentsTable).where(and(...conditions)).limit(1);
   if (!studentRows.length) {
     res.status(404).json({ error: "Student not found" });
@@ -80232,7 +80240,7 @@ ${semesterBlocks}
 </body>
 </html>`;
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-attr 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';");
   res.send(html);
 });
 var results_default = router6;
@@ -80537,7 +80545,23 @@ async function authMiddleware(req, res, next) {
 
 // src/app.ts
 var app = (0, import_express9.default)();
-app.use(helmet({ crossOriginEmbedderPolicy: false }));
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcAttr: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
+    }
+  }
+}));
 var isDev = process.env.NODE_ENV !== "production";
 var rawOrigins = process.env.ALLOWED_ORIGINS;
 var allowedOrigins = rawOrigins ? rawOrigins.split(",").map((s) => s.trim()).filter(Boolean) : [];
