@@ -563,7 +563,7 @@ export default function LandingPage({ onStaffLogin }: LandingPageProps) {
               {FEATURES.map(({ icon, title, desc }) => (
                 <div key={title} style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 4, padding: "28px 24px", transition: "background 0.2s, border-color 0.2s" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 4, background: c.blueLight, border: `1px solid ${c.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20, color: c.blue }}>{icon}</span>
+                    <span className="material-symbols-outlined" style={{ fontFamily: "'Material Symbols Outlined'", fontSize: 20, color: c.blue }}>{icon}</span>
                   </div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: c.textHeading, marginBottom: 8, lineHeight: 1.4 }}>{title}</h3>
                   <p style={{ fontSize: 13, color: c.textBody, lineHeight: 1.65 }}>{desc}</p>
