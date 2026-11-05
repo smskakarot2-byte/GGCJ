@@ -79039,8 +79039,10 @@ function groupByLine(items) {
 function extractHeader(items) {
   const fullText = items.map((i) => i.str).join(" ");
   const header = {};
-  const deptM = fullText.match(/Department\s*:\s*([A-Za-z\s]+?)(?:Class\s*:|Semester\s*:)/);
-  if (deptM) header.department = deptM[1].trim();
+  const deptM = fullText.match(
+    /Department\s*:\s*(.+?)\s*(?:Course\s*Code\s*:|Class\s*:|Semester\s*:|Session\s*:|Course\s*Title\s*:)/i
+  );
+  if (deptM) header.department = deptM[1].trim().replace(/\s+/g, " ");
   const ccM = fullText.match(/Course\s*Code\s*:\s*([A-Z]{2,6}-?[A-Z0-9]{1,6})/);
   if (ccM) header.courseCode = ccM[1].trim();
   const ctStart = fullText.indexOf("Course Title :");

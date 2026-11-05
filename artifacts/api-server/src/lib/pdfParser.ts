@@ -128,8 +128,12 @@ function extractHeader(items: TextItem[]): ParsedHeader {
   const fullText = items.map((i) => i.str).join(" ");
   const header: ParsedHeader = {};
 
-  const deptM = fullText.match(/Department\s*:\s*([A-Za-z\s]+?)(?:Class\s*:|Semester\s*:)/);
-  if (deptM) header.department = deptM[1].trim();
+  // Allow special characters like "." and "&" in department names
+  // (e.g. "Physical Edu. & Sports Sciences"). Stop only at the next header field.
+  const deptM = fullText.match(
+    /Department\s*:\s*(.+?)\s*(?:Course\s*Code\s*:|Class\s*:|Semester\s*:|Session\s*:|Course\s*Title\s*:)/i
+  );
+  if (deptM) header.department = deptM[1].trim().replace(/\s+/g, " ");
 
   const ccM = fullText.match(/Course\s*Code\s*:\s*([A-Z]{2,6}-?[A-Z0-9]{1,6})/);
   if (ccM) header.courseCode = ccM[1].trim();
